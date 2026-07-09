@@ -272,17 +272,17 @@ export default function CompleteCandidateDashboard() {
     <div className="flex flex-col min-h-screen bg-luxury-light text-navy-900 font-sans">
       <Navbar />
 
-      <div className="bg-[#020C1B] text-white py-12 border-b border-gold-500/20">
+      <div className="bg-[#051B3D] text-white py-12 border-b border-blue-600/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="space-y-1">
-            <h1 className="font-serif text-2xl font-bold text-gold-500">Candidate Dashboard</h1>
+            <h1 className="font-serif text-2xl font-bold text-white">Candidate Dashboard</h1>
             <p className="text-xs text-gray-300 font-light">SaaS dossier command center for international placements.</p>
           </div>
           
-          <div className="bg-navy-900/60 border border-gold-500/10 rounded-xl p-3.5 flex items-center space-x-3 text-xs">
-            <User className="h-4.5 w-4.5 text-gold-500" />
+          <div className="bg-[#0B3D91] border border-blue-600/20 rounded-2xl p-3.5 flex items-center space-x-3 text-xs">
+            <User className="h-4.5 w-4.5 text-blue-500" />
             <div>
-              <p className="font-bold text-gray-200">{profile?.fullName || "Rahul Sharma"}</p>
+              <p className="font-bold text-gray-205">{profile?.fullName || "Rahul Sharma"}</p>
               <p className="text-[10px] text-gray-400 font-light mt-0.5">Passport: {profile?.passportNumber || "Pending"}</p>
             </div>
           </div>
@@ -293,7 +293,7 @@ export default function CompleteCandidateDashboard() {
         
         {/* Navigation Sidebar Drawer */}
         <aside className="lg:w-60 shrink-0">
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-2 sticky top-24">
+          <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-md space-y-2 sticky top-24">
             {[
               { tab: "overview", label: "Overview Panel", icon: Grid },
               { tab: "profile", label: "Dossier profile", icon: User },
@@ -312,10 +312,10 @@ export default function CompleteCandidateDashboard() {
                     setProfileMsg(null);
                     setCvMsg(null);
                   }}
-                  className={`w-full flex items-center space-x-2.5 px-4 py-3 rounded-lg text-left text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  className={`w-full flex items-center space-x-2.5 px-4 py-3 rounded-xl text-left text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                     isActive
-                      ? "bg-navy-900 text-gold-500 shadow border-l-4 border-gold-500 font-bold"
-                      : "text-gray-500 hover:bg-luxury-light hover:text-navy-900"
+                      ? "bg-blue-600 text-white shadow border-l-4 border-white font-bold"
+                      : "text-gray-500 hover:bg-luxury-light hover:text-[#051B3D]"
                   }`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
@@ -341,10 +341,10 @@ export default function CompleteCandidateDashboard() {
               {activeTab === "overview" && (
                 <div className="space-y-6">
                   {/* Visual Completion Progress Bar */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                  <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div className="space-y-1.5">
                       <h3 className="font-serif text-sm font-bold text-navy-900">Dossier File Progress</h3>
-                      <p className="text-[11px] text-gray-500 font-light font-sans">Fill all credentials fields to boost your global employer match rate.</p>
+                      <p className="text-[11px] text-gray-505 font-light font-sans">Fill all credentials fields to boost your global employer match rate.</p>
                     </div>
 
                     <div className="w-full md:w-56 space-y-1.5 text-xs font-semibold">
@@ -354,7 +354,7 @@ export default function CompleteCandidateDashboard() {
                       </div>
                       <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden border border-gray-200">
                         <div
-                          className="h-full bg-gradient-to-r from-gold-500 to-gold-600 rounded-full transition-all duration-500"
+                          className="h-full bg-blue-650 rounded-full transition-all duration-500"
                           style={{ width: `${getProfileCompletion()}%` }}
                         />
                       </div>
@@ -365,8 +365,8 @@ export default function CompleteCandidateDashboard() {
                   {activeVisaApp ? (
                     <VisaTimeline currentStage={activeVisaApp.visaStatus} notes={activeVisaApp.notes} />
                   ) : (
-                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm text-center space-y-3">
-                      <Sparkles className="h-7 w-7 text-gold-500 mx-auto" />
+                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md text-center space-y-3">
+                      <Sparkles className="h-7 w-7 text-blue-500 mx-auto" />
                       <h4 className="font-serif text-navy-900 font-bold text-sm">Deployment Path Ready</h4>
                       <p className="text-[11px] text-gray-500 font-light max-w-sm mx-auto leading-relaxed font-sans">
                         Select a campaign and apply. Your visa clearances, finger scans, and medical results will populate here upon employer confirmation.
@@ -378,14 +378,14 @@ export default function CompleteCandidateDashboard() {
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
                     {/* Applied Campaigns */}
-                    <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+                    <div className="lg:col-span-2 bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-4">
                       <h3 className="font-serif font-bold text-xs text-navy-900 pb-3 border-b border-gray-150 uppercase tracking-wider">Applied Campaigns</h3>
                       {applications.length === 0 ? (
-                        <p className="text-xs text-gray-400 py-8 text-center font-light">No applications logged. Browse the active job board.</p>
+                        <p className="text-xs text-gray-400 py-8 text-center font-light font-sans">No applications logged. Browse the active job board.</p>
                       ) : (
                         <div className="space-y-3">
                           {applications.map((app) => (
-                            <div key={app.id} className="border border-gray-150 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-luxury-light hover:border-gold-500/30 transition-colors">
+                            <div key={app.id} className="border border-gray-150 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-luxury-light hover:border-blue-500/20 transition-colors">
                               <div>
                                 <h4 className="font-bold text-xs text-navy-900">{app.job.title}</h4>
                                 <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{app.job.employer.companyName} | {app.job.country}</p>
@@ -400,18 +400,18 @@ export default function CompleteCandidateDashboard() {
                     </div>
 
                     {/* Bookmarked lists */}
-                    <div className="lg:col-span-1 bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+                    <div className="lg:col-span-1 bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-4">
                       <h3 className="font-serif font-bold text-xs text-navy-900 pb-3 border-b border-gray-150 uppercase tracking-wider flex items-center space-x-1.5">
-                        <Bookmark className="h-4 w-4 text-gold-500" />
+                        <Bookmark className="h-4 w-4 text-blue-500" />
                         <span>Saved Bookmarks</span>
                       </h3>
                       {savedJobsList.length === 0 ? (
-                        <p className="text-xs text-gray-400 py-8 text-center font-light">Watchlist empty.</p>
+                        <p className="text-xs text-gray-400 py-8 text-center font-light font-sans">Watchlist empty.</p>
                       ) : (
                         <div className="space-y-3 text-xs font-semibold">
                           {savedJobsList.map((job) => (
                             <div key={job.id} className="border-b border-gray-100 pb-2.5 last:border-0 last:pb-0">
-                              <Link href="/jobs" className="font-bold text-navy-900 hover:text-gold-600 truncate block">
+                              <Link href="/jobs" className="font-bold text-navy-900 hover:text-blue-500 truncate block transition-colors">
                                 {job.title}
                               </Link>
                               <div className="flex justify-between items-center text-[10px] text-gray-400 mt-1">
@@ -430,19 +430,19 @@ export default function CompleteCandidateDashboard() {
 
               {/* Tab 2: Profile Update */}
               {activeTab === "profile" && (
-                <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8 shadow-sm space-y-6">
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-md space-y-6">
                   <div>
                     <h3 className="font-serif text-sm font-bold text-navy-900 pb-2 border-b border-gray-150 uppercase tracking-wider">Dossier File Details</h3>
                     <p className="text-[10px] text-gray-400 font-light mt-1">Keep details verified to ensure smooth consulate registrations.</p>
                   </div>
 
                   {profileMsg && (
-                    <div className={`p-4 rounded-lg text-xs font-semibold border ${profileMsg.isError ? "bg-red-50 border-red-200 text-red-700" : "bg-green-50 border-green-200 text-green-700"}`}>
+                    <div className={`p-4 rounded-xl text-xs font-semibold border ${profileMsg.isError ? "bg-red-50 border-red-200 text-red-700" : "bg-green-50 border-green-200 text-green-700"}`}>
                       {profileMsg.text}
                     </div>
                   )}
 
-                  <form onSubmit={handleSaveProfile} className="space-y-4 text-xs font-semibold text-gray-500">
+                  <form onSubmit={handleSaveProfile} className="space-y-4 text-xs font-semibold text-gray-550">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block mb-1 text-navy-900">Full Name *</label>
@@ -451,7 +451,7 @@ export default function CompleteCandidateDashboard() {
                           required
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-250 text-navy-900 rounded-lg p-3 outline-none focus:border-gold-500 font-medium"
+                          className="w-full bg-luxury-light border border-gray-250 text-navy-900 rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium"
                         />
                       </div>
                       <div>
@@ -461,7 +461,7 @@ export default function CompleteCandidateDashboard() {
                           required
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-250 text-navy-900 rounded-lg p-3 outline-none focus:border-gold-500 font-medium"
+                          className="w-full bg-luxury-light border border-gray-250 text-navy-900 rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium"
                         />
                       </div>
                     </div>
@@ -473,7 +473,7 @@ export default function CompleteCandidateDashboard() {
                           type="text"
                           value={passportNumber}
                           onChange={(e) => setPassportNumber(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-250 text-navy-900 rounded-lg p-3 outline-none focus:border-gold-500 font-medium uppercase"
+                          className="w-full bg-luxury-light border border-gray-250 text-navy-900 rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium uppercase"
                         />
                       </div>
                       <div>
@@ -482,7 +482,7 @@ export default function CompleteCandidateDashboard() {
                           type="number"
                           value={experienceYears}
                           onChange={(e) => setExperienceYears(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-250 text-navy-900 rounded-lg p-3 outline-none focus:border-gold-500 font-medium"
+                          className="w-full bg-luxury-light border border-gray-250 text-navy-900 rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium"
                         />
                       </div>
                       <div>
@@ -491,7 +491,7 @@ export default function CompleteCandidateDashboard() {
                           type="text"
                           value={location}
                           onChange={(e) => setLocation(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-250 text-navy-900 rounded-lg p-3 outline-none focus:border-gold-500 font-medium"
+                          className="w-full bg-luxury-light border border-gray-250 text-navy-900 rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium"
                         />
                       </div>
                     </div>
@@ -503,7 +503,7 @@ export default function CompleteCandidateDashboard() {
                           type="text"
                           value={skillsText}
                           onChange={(e) => setSkillsText(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-250 text-navy-900 rounded-lg p-3 outline-none focus:border-gold-500 font-medium"
+                          className="w-full bg-luxury-light border border-gray-250 text-navy-900 rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium"
                         />
                       </div>
                       <div>
@@ -512,7 +512,7 @@ export default function CompleteCandidateDashboard() {
                           type="text"
                           value={education}
                           onChange={(e) => setEducation(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-250 text-navy-900 rounded-lg p-3 outline-none focus:border-gold-500 font-medium"
+                          className="w-full bg-luxury-light border border-gray-250 text-navy-900 rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium"
                         />
                       </div>
                     </div>
@@ -520,7 +520,7 @@ export default function CompleteCandidateDashboard() {
                     <button
                       type="submit"
                       disabled={profileSaving}
-                      className="w-full bg-navy-900 hover:bg-navy-800 text-gold-500 font-bold uppercase tracking-wider py-4 rounded-lg flex items-center justify-center space-x-2 border border-gold-500/10 cursor-pointer disabled:opacity-50 font-sans"
+                      className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-4 rounded-xl flex items-center justify-center space-x-2 border border-blue-500/25 cursor-pointer disabled:opacity-50 font-sans"
                     >
                       {profileSaving ? <RefreshCw className="h-4.5 w-4.5 animate-spin" /> : <span>Update Profile Dossier</span>}
                     </button>
@@ -532,17 +532,17 @@ export default function CompleteCandidateDashboard() {
               {activeTab === "resume" && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* File Vault */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+                  <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-4">
                     <h3 className="font-serif font-bold text-xs text-navy-900 pb-2.5 border-b border-gray-150 uppercase tracking-wider">CV Resume Vault</h3>
                     {cvMsg && (
-                      <div className="p-3 bg-green-50 border border-green-200 text-green-700 rounded text-[11px] font-semibold flex items-center space-x-1.5">
+                      <div className="p-3 bg-green-50 border border-green-200 text-green-700 rounded-xl text-[11px] font-semibold flex items-center space-x-1.5">
                         <CheckCircle className="h-4 w-4 shrink-0" />
                         <p>{cvMsg}</p>
                       </div>
                     )}
 
                     {profile?.resumeUrl ? (
-                      <div className="bg-green-50 border border-green-200 p-4.5 rounded-xl flex items-center justify-between">
+                      <div className="bg-green-50 border border-green-200 p-4.5 rounded-2xl flex items-center justify-between">
                         <div className="flex items-center space-x-2 text-xs text-green-800 font-bold">
                           <FileText className="h-5 w-5 text-green-600 shrink-0" />
                           <span className="truncate max-w-[150px]">Resume_Verified.pdf</span>
@@ -551,16 +551,16 @@ export default function CompleteCandidateDashboard() {
                           href={profile.resumeUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="bg-white border border-green-250 text-green-700 font-bold px-3 py-1.5 rounded text-[10px] uppercase hover:bg-gray-50 transition-colors"
+                          className="bg-white border border-green-250 text-green-705 font-bold px-3.5 py-2 rounded-xl text-[10px] uppercase hover:bg-gray-50 transition-colors"
                         >
                           Review File
                         </a>
                       </div>
                     ) : (
-                      <div className="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center hover:border-gold-500 transition-colors">
-                        <UploadCloud className="h-8 w-8 text-gold-500 mx-auto mb-2" />
+                      <div className="border-2 border-dashed border-gray-200 rounded-3xl p-10 text-center hover:border-blue-600 transition-colors">
+                        <UploadCloud className="h-8 w-8 text-blue-500 mx-auto mb-2" />
                         <p className="text-[10px] text-gray-500 font-semibold mb-3">Upload PDF or MS Word Resumes</p>
-                        <label className="bg-navy-900 hover:bg-navy-800 text-gold-500 text-[10px] font-bold uppercase tracking-wider px-5 py-2.5 rounded-lg border border-gold-500/10 cursor-pointer">
+                        <label className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider px-5 py-3 rounded-xl border border-blue-500/25 cursor-pointer">
                           {uploadingCV ? "Uploading..." : "Select File"}
                           <input type="file" accept=".pdf,.doc,.docx" onChange={handleResumeUpload} disabled={uploadingCV} className="hidden" />
                         </label>
@@ -569,18 +569,18 @@ export default function CompleteCandidateDashboard() {
                   </div>
 
                   {/* Builder Form */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+                  <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-4">
                     <h3 className="font-serif font-bold text-xs text-navy-900 pb-2.5 border-b border-gray-150 uppercase tracking-wider">Dynamic Resume Builder</h3>
                     <p className="text-[10px] text-gray-400 font-light leading-relaxed">No resume file? Input details below to generate a printable format.</p>
 
-                    <form onSubmit={handleResumeBuild} className="space-y-3 text-xs text-gray-500 font-semibold">
+                    <form onSubmit={handleResumeBuild} className="space-y-3.5 text-xs text-gray-550 font-semibold">
                       <div>
                         <label className="block mb-0.5 text-navy-900">Career Objective</label>
                         <input
                           type="text"
                           value={resObjective}
                           onChange={(e) => setResObjective(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-200 rounded-lg p-2.5 outline-none font-medium"
+                          className="w-full bg-luxury-light border border-gray-200 rounded-xl p-3 outline-none font-medium"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
@@ -591,7 +591,7 @@ export default function CompleteCandidateDashboard() {
                             required
                             value={resCompany}
                             onChange={(e) => setResCompany(e.target.value)}
-                            className="w-full bg-luxury-light border border-gray-200 rounded-lg p-2.5 outline-none font-medium"
+                            className="w-full bg-luxury-light border border-gray-200 rounded-xl p-3 outline-none font-medium"
                           />
                         </div>
                         <div>
@@ -601,7 +601,7 @@ export default function CompleteCandidateDashboard() {
                             required
                             value={resJobTitle}
                             onChange={(e) => setResJobTitle(e.target.value)}
-                            className="w-full bg-luxury-light border border-gray-200 rounded-lg p-2.5 outline-none font-medium"
+                            className="w-full bg-luxury-light border border-gray-200 rounded-xl p-3 outline-none font-medium"
                           />
                         </div>
                       </div>
@@ -613,7 +613,7 @@ export default function CompleteCandidateDashboard() {
                             required
                             value={resDegree}
                             onChange={(e) => setResDegree(e.target.value)}
-                            className="w-full bg-luxury-light border border-gray-200 rounded-lg p-2.5 outline-none font-medium"
+                            className="w-full bg-luxury-light border border-gray-200 rounded-xl p-3 outline-none font-medium"
                           />
                         </div>
                         <div>
@@ -623,7 +623,7 @@ export default function CompleteCandidateDashboard() {
                             required
                             value={resSchool}
                             onChange={(e) => setResSchool(e.target.value)}
-                            className="w-full bg-luxury-light border border-gray-200 rounded-lg p-2.5 outline-none font-medium"
+                            className="w-full bg-luxury-light border border-gray-200 rounded-xl p-3 outline-none font-medium"
                           />
                         </div>
                       </div>
@@ -631,7 +631,7 @@ export default function CompleteCandidateDashboard() {
                       <button
                         type="submit"
                         disabled={resumeBuilding}
-                        className="w-full bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 font-bold uppercase tracking-wider py-3 rounded-lg text-[10px] flex items-center justify-center space-x-2 shadow cursor-pointer disabled:opacity-50"
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-3.5 rounded-xl text-[10px] flex items-center justify-center space-x-2 shadow cursor-pointer border border-blue-500/25 disabled:opacity-50"
                       >
                         {resumeBuilding ? <RefreshCw className="h-4 w-4 animate-spin" /> : <span>Build & Attest Resume</span>}
                       </button>
@@ -642,10 +642,10 @@ export default function CompleteCandidateDashboard() {
 
               {/* Tab 4: Visa Files downloads */}
               {activeTab === "visa" && (
-                <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8 shadow-sm space-y-6">
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-md space-y-6">
                   <div>
                     <h3 className="font-serif text-sm font-bold text-navy-900 pb-2 border-b border-gray-150 uppercase tracking-wider">Visa Copy & Clearances</h3>
-                    <p className="text-[10px] text-gray-400 font-light mt-1">Review stamped permits, flight charts and medical certificates.</p>
+                    <p className="text-[10px] text-gray-400 font-light mt-1 font-sans">Review stamped permits, flight charts and medical certificates.</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-navy-900 font-bold">
@@ -654,9 +654,9 @@ export default function CompleteCandidateDashboard() {
                       { name: "Wafid Diagnostics Report", file: "Medical_Clearance_GAMCA.pdf", date: "June 25, 2026", type: "Medical" },
                       { name: "Consulate Employment Stamp", file: "Stamped_Visa_Z123.pdf", date: "July 02, 2026", type: "Visa Copy" },
                     ].map((doc, idx) => (
-                      <div key={idx} className="border border-gray-200 rounded-2xl p-5 space-y-4 hover:border-gold-500 transition-colors bg-luxury-light flex flex-col justify-between">
+                      <div key={idx} className="border border-gray-200 rounded-2xl p-5 space-y-4 hover:border-blue-600 transition-colors bg-luxury-light flex flex-col justify-between">
                         <div className="space-y-1.5">
-                          <span className="text-[9px] uppercase tracking-wider font-bold text-gold-600 bg-gold-500/10 px-2 py-0.5 rounded">
+                          <span className="text-[9px] uppercase tracking-wider font-bold text-blue-600 bg-blue-600/10 px-2 py-0.5 rounded-lg border border-blue-500/10">
                             {doc.type}
                           </span>
                           <h4 className="font-bold text-navy-900 leading-tight pt-1">{doc.name}</h4>
@@ -668,9 +668,9 @@ export default function CompleteCandidateDashboard() {
                             e.preventDefault();
                             alert(`Initiating secure SSL download for file: ${doc.file}`);
                           }}
-                          className="w-full bg-white hover:bg-gray-50 border border-gray-250 py-2.5 rounded-lg text-center text-[10px] font-bold uppercase tracking-wider flex items-center justify-center space-x-1.5 shadow-sm transition-colors cursor-pointer"
+                          className="w-full bg-white hover:bg-gray-50 border border-gray-250 py-3 rounded-xl text-center text-[10px] font-bold uppercase tracking-wider flex items-center justify-center space-x-1.5 shadow-sm transition-colors cursor-pointer"
                         >
-                          <FileDown className="h-3.5 w-3.5 text-navy-900 shrink-0" />
+                          <FileDown className="h-3.5 w-3.5 text-[#051B3D] shrink-0" />
                           <span>Download File</span>
                         </a>
                       </div>
@@ -681,13 +681,13 @@ export default function CompleteCandidateDashboard() {
 
               {/* Tab 5: Chat logs */}
               {activeTab === "messages" && (
-                <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col h-[500px]">
-                  <div className="p-4 border-b border-gray-150 bg-[#020C1B] text-white rounded-t-xl flex items-center space-x-3">
-                    <div className="h-8 w-8 bg-gold-500 text-navy-950 rounded-full flex items-center justify-center font-bold text-xs">
+                <div className="bg-white border border-gray-200 rounded-2xl shadow-md flex flex-col h-[500px]">
+                  <div className="p-4 border-b border-gray-150 bg-[#051B3D] text-white rounded-t-2xl flex items-center space-x-3">
+                    <div className="h-8 w-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs border border-blue-500/25">
                       RM
                     </div>
                     <div>
-                      <h4 className="font-serif text-xs font-bold text-gold-500">Recruitment Desk</h4>
+                      <h4 className="font-serif text-xs font-bold text-blue-500">Recruitment Desk</h4>
                       <p className="text-[9px] text-gray-300 font-light">Online Liaison Officer</p>
                     </div>
                   </div>
@@ -697,7 +697,7 @@ export default function CompleteCandidateDashboard() {
                       const isRec = msg.sender === "recruiter";
                       return (
                         <div key={i} className={`flex ${isRec ? "justify-start" : "justify-end"}`}>
-                          <div className={`max-w-[75%] rounded-2xl p-4 space-y-1.5 ${isRec ? "bg-luxury-light text-navy-900 border border-gray-200" : "bg-[#020C1B] text-white"}`}>
+                          <div className={`max-w-[75%] rounded-2xl p-4 space-y-1.5 ${isRec ? "bg-luxury-light text-[#051B3D] border border-gray-250" : "bg-[#0B3D91] text-white"}`}>
                             <p className="leading-relaxed font-light">{msg.text}</p>
                             <span className="block text-[9px] text-gray-400 text-right">{msg.time}</span>
                           </div>
@@ -706,18 +706,18 @@ export default function CompleteCandidateDashboard() {
                     })}
                   </div>
 
-                  <form onSubmit={handleSendMessage} className="p-3 border-t border-gray-150 bg-luxury-light rounded-b-xl flex gap-2">
+                  <form onSubmit={handleSendMessage} className="p-3.5 border-t border-gray-150 bg-luxury-light rounded-b-2xl flex gap-2">
                     <input
                       type="text"
                       required
                       placeholder="Type response to consultant desk..."
                       value={chatMessage}
                       onChange={(e) => setChatMessage(e.target.value)}
-                      className="flex-1 bg-white border border-gray-200 text-navy-900 text-xs rounded-lg px-4.5 py-3 outline-none focus:border-gold-500"
+                      className="flex-1 bg-white border border-gray-205 text-[#051B3D] text-xs rounded-xl px-4.5 py-3.5 outline-none focus:border-blue-500"
                     />
                     <button
                       type="submit"
-                      className="bg-navy-900 text-gold-500 text-xs font-bold px-6 py-3 rounded-lg border border-gold-500/10 uppercase hover:bg-navy-800 transition-colors cursor-pointer"
+                      className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-6 py-3 rounded-xl border border-blue-500/25 uppercase transition-colors cursor-pointer"
                     >
                       Send
                     </button>
@@ -727,10 +727,10 @@ export default function CompleteCandidateDashboard() {
 
               {/* Tab 6: Settings */}
               {activeTab === "settings" && (
-                <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8 shadow-sm space-y-6">
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-md space-y-6">
                   <div>
                     <h3 className="font-serif text-sm font-bold text-navy-900 pb-2 border-b border-gray-150 uppercase tracking-wider">Account Settings</h3>
-                    <p className="text-[10px] text-gray-400 font-light mt-1">Configure profile passwords and credentials verification alerts.</p>
+                    <p className="text-[10px] text-gray-400 font-light mt-1 font-sans">Configure profile passwords and credentials verification alerts.</p>
                   </div>
 
                   <form
@@ -738,28 +738,28 @@ export default function CompleteCandidateDashboard() {
                       e.preventDefault();
                       alert("Password updated successfully!");
                     }}
-                    className="space-y-4 max-w-sm text-xs font-semibold text-gray-500"
+                    className="space-y-4 max-w-sm text-xs font-semibold text-gray-550"
                   >
                     <div>
-                      <label className="block mb-1 text-navy-900">Current Password</label>
+                      <label className="block mb-1 text-[#051B3D]">Current Password</label>
                       <input
                         type="password"
                         required
-                        className="w-full bg-luxury-light border border-gray-200 rounded-lg p-3 outline-none font-medium"
+                        className="w-full bg-luxury-light border border-gray-200 rounded-xl p-3 outline-none font-medium text-navy-900"
                       />
                     </div>
                     <div>
-                      <label className="block mb-1 text-navy-900">New Password</label>
+                      <label className="block mb-1 text-[#051B3D]">New Password</label>
                       <input
                         type="password"
                         required
-                        className="w-full bg-luxury-light border border-gray-200 rounded-lg p-3 outline-none font-medium"
+                        className="w-full bg-luxury-light border border-gray-200 rounded-xl p-3 outline-none font-medium text-navy-900"
                       />
                     </div>
 
                     <button
                       type="submit"
-                      className="bg-navy-900 text-gold-500 font-bold uppercase tracking-wider py-3.5 px-6 rounded-lg border border-gold-500/10 cursor-pointer"
+                      className="bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-3.5 px-6 rounded-xl border border-blue-500/25 cursor-pointer"
                     >
                       Update Password
                     </button>

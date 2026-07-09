@@ -10,18 +10,14 @@ import {
   DollarSign,
   Calendar,
   ChevronRight,
-  User,
   AlertCircle,
   RefreshCw,
   CheckCircle2,
   Bookmark,
   Share2,
   Bell,
-  FileText,
-  BookmarkCheck,
-  Clipboard,
   Layers,
-  GraduationCap,
+  BookmarkCheck,
 } from "lucide-react";
 
 interface Job {
@@ -66,7 +62,7 @@ export default function CompleteJobPortal() {
   const [applyMessage, setApplyMessage] = useState<{ text: string; isError: boolean } | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   
-  // Bookmark/Save job states (Persisted in localStorage for fast local response)
+  // Bookmark/Save job states (Persisted in localStorage)
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -119,6 +115,10 @@ export default function CompleteJobPortal() {
         const data = await res.json();
         setJobs(data.jobs || []);
         setFilteredJobs(data.jobs || []);
+        // Auto-select the first job for a premium look
+        if (data.jobs && data.jobs.length > 0) {
+          setSelectedJob(data.jobs[0]);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -149,7 +149,7 @@ export default function CompleteJobPortal() {
       result = result.filter((job) => job.sector === selectedSector);
     }
 
-    // Filter by salary range (simple heuristics)
+    // Filter by salary range
     if (selectedSalary) {
       result = result.filter((job) => {
         const range = job.salaryRange || "";
@@ -169,7 +169,7 @@ export default function CompleteJobPortal() {
       });
     }
 
-    // Filter by job type (mapped by sector/tag in template)
+    // Filter by job type
     if (selectedJobType) {
       result = result.filter((job) => {
         if (selectedJobType === "permanent") return job.sector !== "Logistics";
@@ -265,20 +265,23 @@ export default function CompleteJobPortal() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-luxury-light text-navy-900">
+    <div className="flex flex-col min-h-screen bg-slate-50 text-navy-900 font-sans">
       <Navbar />
 
       {/* Hero Banner Header */}
-      <section className="bg-navy-900 text-white py-16 border-b border-gold-500/25">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div>
-            <h1 className="font-serif text-3xl font-extrabold text-gold-500 tracking-wider">Enterprise Job Board</h1>
-            <p className="text-xs text-gray-300 mt-1.5 font-light">
+      <section className="bg-[#051B3D] text-white pt-32 pb-20 border-b border-white/5 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(37,99,235,0.1),transparent_60%)] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center md:text-left">
+            <h1 className="font-headline text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Enterprise Job Board</h1>
+            <p className="text-xs sm:text-sm text-gray-300 font-light max-w-xl">
               Filter campaigns, configure job alerts, and apply instantly to premium international positions.
             </p>
           </div>
           {toastMessage && (
-            <div className="bg-gold-500 text-navy-950 px-4 py-2 rounded-lg text-xs font-bold shadow-lg animate-bounce">
+            <div className="bg-blue-600 text-white border border-blue-500/20 px-6 py-3 rounded-full text-xs font-bold shadow-lg animate-pulse whitespace-nowrap">
               {toastMessage}
             </div>
           )}
@@ -286,17 +289,17 @@ export default function CompleteJobPortal() {
       </section>
 
       {/* Advanced Filters */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-10">
-        <div className="bg-navy-900 border border-gold-500/30 rounded-xl p-5 shadow-xl space-y-4">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10 w-full">
+        <div className="bg-white dark:bg-navy-950 border border-gray-150 dark:border-white/5 rounded-[28px] p-6 shadow-enterprise space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative col-span-1 md:col-span-2">
-              <Search className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-gray-400" />
+              <Search className="absolute left-4 top-3.5 h-4.5 w-4.5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search job title, keywords or requirements..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-navy-850 border border-gold-500/10 text-white rounded-lg pl-10 pr-4 py-3 text-xs outline-none focus:border-gold-500"
+                className="w-full bg-slate-50 dark:bg-navy-900/40 border border-gray-200 dark:border-white/10 text-navy-900 dark:text-white rounded-xl pl-11 pr-4 py-3 text-xs outline-none focus:border-blue-600 focus:bg-white transition-all font-medium font-sans"
               />
             </div>
 
@@ -304,11 +307,11 @@ export default function CompleteJobPortal() {
               <select
                 value={selectedCountry}
                 onChange={(e) => setSelectedCountry(e.target.value)}
-                className="w-full bg-navy-850 border border-gold-500/10 text-white rounded-lg px-4 py-3 text-xs outline-none focus:border-gold-500 cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-navy-900/40 border border-gray-200 dark:border-white/10 text-navy-900 dark:text-white rounded-xl px-4 py-3 text-xs outline-none focus:border-blue-600 focus:bg-white transition-all cursor-pointer font-bold font-sans"
               >
                 <option value="">Country: All</option>
                 {countries.map((c) => (
-                  <option key={c} value={c}>
+                  <option key={c} value={c} className="text-navy-900">
                     {c}
                   </option>
                 ))}
@@ -319,11 +322,11 @@ export default function CompleteJobPortal() {
               <select
                 value={selectedSector}
                 onChange={(e) => setSelectedSector(e.target.value)}
-                className="w-full bg-navy-850 border border-gold-500/10 text-white rounded-lg px-4 py-3 text-xs outline-none focus:border-gold-500 cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-navy-900/40 border border-gray-200 dark:border-white/10 text-navy-900 dark:text-white rounded-xl px-4 py-3 text-xs outline-none focus:border-blue-600 focus:bg-white transition-all cursor-pointer font-bold font-sans"
               >
                 <option value="">Industry: All</option>
                 {sectors.map((s) => (
-                  <option key={s} value={s}>
+                  <option key={s} value={s} className="text-navy-900">
                     {s}
                   </option>
                 ))}
@@ -331,12 +334,12 @@ export default function CompleteJobPortal() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 pt-2 border-t border-gold-500/5">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 pt-3 border-t border-gray-100 dark:border-white/5">
             <div>
               <select
                 value={selectedSalary}
                 onChange={(e) => setSelectedSalary(e.target.value)}
-                className="w-full bg-navy-850 border border-gold-500/10 text-white rounded-lg px-4.5 py-3 text-xs outline-none focus:border-gold-500 cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-navy-900/40 border border-gray-200 dark:border-white/10 text-navy-900 dark:text-white rounded-xl px-4 py-3 text-xs outline-none focus:border-blue-600 focus:bg-white transition-all cursor-pointer font-bold font-sans"
               >
                 <option value="">Salary: All</option>
                 <option value="low">Gulf Currency (SR/AED)</option>
@@ -348,7 +351,7 @@ export default function CompleteJobPortal() {
               <select
                 value={selectedExperience}
                 onChange={(e) => setSelectedExperience(e.target.value)}
-                className="w-full bg-navy-850 border border-gold-500/10 text-white rounded-lg px-4.5 py-3 text-xs outline-none focus:border-gold-500 cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-navy-900/40 border border-gray-200 dark:border-white/10 text-navy-900 dark:text-white rounded-xl px-4 py-3 text-xs outline-none focus:border-blue-600 focus:bg-white transition-all cursor-pointer font-bold font-sans"
               >
                 <option value="">Experience: All</option>
                 <option value="junior">Junior (1-3 Years)</option>
@@ -360,7 +363,7 @@ export default function CompleteJobPortal() {
               <select
                 value={selectedJobType}
                 onChange={(e) => setSelectedJobType(e.target.value)}
-                className="w-full bg-navy-850 border border-gold-500/10 text-white rounded-lg px-4.5 py-3 text-xs outline-none focus:border-gold-500 cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-navy-900/40 border border-gray-200 dark:border-white/10 text-navy-900 dark:text-white rounded-xl px-4 py-3 text-xs outline-none focus:border-blue-600 focus:bg-white transition-all cursor-pointer font-bold font-sans"
               >
                 <option value="">Job Type: All</option>
                 <option value="permanent">Permanent Position</option>
@@ -372,11 +375,11 @@ export default function CompleteJobPortal() {
               <select
                 value={selectedSkill}
                 onChange={(e) => setSelectedSkill(e.target.value)}
-                className="w-full bg-navy-850 border border-gold-500/10 text-white rounded-lg px-4.5 py-3 text-xs outline-none focus:border-gold-500 cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-navy-900/40 border border-gray-200 dark:border-white/10 text-navy-900 dark:text-white rounded-xl px-4 py-3 text-xs outline-none focus:border-blue-600 focus:bg-white transition-all cursor-pointer font-bold font-sans"
               >
                 <option value="">Skills Match: All</option>
                 {skills.map((s) => (
-                  <option key={s} value={s}>
+                  <option key={s} value={s} className="text-navy-900">
                     {s}
                   </option>
                 ))}
@@ -385,7 +388,7 @@ export default function CompleteJobPortal() {
 
             <button
               onClick={handleClearFilters}
-              className="bg-navy-800 hover:bg-navy-750 text-gold-500 text-[10px] font-bold uppercase tracking-wider py-3 rounded-lg border border-gold-500/20 cursor-pointer transition-colors"
+              className="bg-blue-600/10 hover:bg-blue-600 hover:text-white text-blue-650 text-[10px] font-bold uppercase tracking-wider py-3 rounded-xl cursor-pointer transition-all duration-200 font-headline border border-blue-500/10"
             >
               Clear Filters
             </button>
@@ -394,121 +397,128 @@ export default function CompleteJobPortal() {
       </section>
 
       {/* Main Grid View */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 w-full">
         
         {/* Left Side: Job Postings Feed */}
-        <div className="lg:col-span-8 space-y-4">
-          <div className="flex justify-between items-center text-xs text-gray-500 font-semibold mb-4">
-            <p>Showing {filteredJobs.length} open recruitment campaigns</p>
+        <div className="lg:col-span-7 space-y-4">
+          <div className="flex justify-between items-center text-xs text-gray-500 font-semibold mb-2 ml-1">
+            <p>Showing {filteredJobs.length} active openings</p>
           </div>
 
           {loading ? (
-            <div className="bg-white border border-gray-200 rounded-xl p-16 flex items-center justify-center">
-              <RefreshCw className="h-5 w-5 animate-spin text-gold-500 mr-2" />
+            <div className="bg-white border border-gray-150 rounded-[24px] p-20 flex flex-col items-center justify-center shadow-enterprise">
+              <RefreshCw className="h-6 w-6 animate-spin text-blue-500 mb-3" />
               <span className="text-xs">Connecting to job databases...</span>
             </div>
           ) : filteredJobs.length === 0 ? (
-            <div className="bg-white border border-gray-200 rounded-xl p-16 text-center space-y-3 text-gray-500">
-              <AlertCircle className="h-8 w-8 text-gold-500 mx-auto" />
-              <h3 className="font-serif font-bold text-navy-900">No vacancies matched your criteria</h3>
-              <p className="text-xs font-light">Try expanding your search parameters or clearing filters.</p>
+            <div className="bg-white border border-gray-150 rounded-[24px] p-16 text-center space-y-4 text-gray-500 shadow-enterprise">
+              <AlertCircle className="h-10 w-10 text-blue-500 mx-auto" />
+              <h3 className="font-headline font-bold text-navy-900 text-sm">No vacancies matched your criteria</h3>
+              <p className="text-xs font-light max-w-sm mx-auto">Try expanding your search parameters or clearing active filters.</p>
               <button
                 onClick={handleClearFilters}
-                className="bg-navy-900 text-gold-500 text-[10px] font-bold uppercase tracking-wider px-6 py-2.5 rounded border border-gold-500/10"
+                className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider px-6 py-3 rounded-full cursor-pointer transition-all border border-blue-500/20 shadow-md font-headline"
               >
                 Reset Search Filters
               </button>
             </div>
           ) : (
-            filteredJobs.map((job) => {
-              const isSaved = savedJobs.includes(job.id);
-              return (
-                <div
-                  key={job.id}
-                  onClick={() => {
-                    setSelectedJob(job);
-                    setApplyMessage(null);
-                  }}
-                  className={`bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer ${
-                    selectedJob?.id === job.id ? "border-gold-500 ring-1 ring-gold-500/50" : "border-gray-200"
-                  }`}
-                >
-                  <div className="flex justify-between items-start gap-4">
-                    <div>
-                      <h3 className="font-serif text-lg font-bold text-navy-900 hover:text-gold-600 transition-colors">
-                        {job.title}
-                      </h3>
-                      <p className="text-xs text-gold-600 font-semibold mt-0.5">{job.employer.companyName}</p>
+            <div className="space-y-4">
+              {filteredJobs.map((job) => {
+                const isSaved = savedJobs.includes(job.id);
+                const isSelected = selectedJob?.id === job.id;
+                return (
+                  <div
+                    key={job.id}
+                    onClick={() => {
+                      setSelectedJob(job);
+                      setApplyMessage(null);
+                    }}
+                    className={`bg-white border rounded-[20px] p-6 shadow-enterprise hover:shadow-md transition-all duration-300 cursor-pointer ${
+                      isSelected
+                        ? "border-blue-600 ring-2 ring-blue-500/10"
+                        : "border-gray-150 hover:border-blue-500/20"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start gap-4">
+                      <div>
+                        <h3 className="font-headline text-base font-bold text-navy-900 group-hover:text-blue-600 transition-colors leading-snug">
+                          {job.title}
+                        </h3>
+                        <p className="text-xs text-blue-600 font-bold mt-1">{job.employer.companyName}</p>
+                      </div>
+
+                      <div className="flex items-center space-x-2 shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSaveJob(job.id);
+                          }}
+                          className={`p-2.5 rounded-xl border transition-colors cursor-pointer ${
+                            isSaved
+                              ? "bg-blue-600/10 text-blue-600 border-blue-500/20"
+                              : "border-gray-200 hover:bg-gray-50 text-gray-400 hover:border-blue-500/20"
+                          }`}
+                        >
+                          {isSaved ? <BookmarkCheck className="h-4.5 w-4.5" /> : <Bookmark className="h-4.5 w-4.5" />}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShareJob(job);
+                          }}
+                          className="p-2.5 rounded-xl border border-gray-200 text-gray-400 hover:bg-gray-50 hover:border-blue-500/20 transition-colors cursor-pointer"
+                        >
+                          <Share2 className="h-4.5 w-4.5" />
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSaveJob(job.id);
-                        }}
-                        className={`p-2 rounded border border-gray-150 hover:bg-gray-50 hover:border-gold-500/35 transition-colors cursor-pointer ${
-                          isSaved ? "bg-gold-500/10 text-gold-600 border-gold-500/30" : "text-gray-400"
-                        }`}
-                      >
-                        {isSaved ? <BookmarkCheck className="h-4.5 w-4.5" /> : <Bookmark className="h-4.5 w-4.5" />}
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleShareJob(job);
-                        }}
-                        className="p-2 rounded border border-gray-150 text-gray-400 hover:bg-gray-50 hover:border-gold-500/35 transition-colors cursor-pointer"
-                      >
-                        <Share2 className="h-4.5 w-4.5" />
-                      </button>
+                    <p className="text-xs text-gray-500 mt-4 leading-relaxed line-clamp-2 font-light">
+                      {job.description}
+                    </p>
+
+                    <div className="flex flex-wrap gap-4 mt-6 text-xs text-gray-500 pt-4 border-t border-gray-100 font-medium">
+                      <span className="flex items-center space-x-1.5">
+                        <MapPin className="h-4 w-4 text-blue-600 shrink-0" />
+                        <span>{job.country}</span>
+                      </span>
+                      <span className="flex items-center space-x-1.5">
+                        <Layers className="h-4 w-4 text-blue-600 shrink-0" />
+                        <span>{job.sector}</span>
+                      </span>
+                      <span className="flex items-center space-x-1.5">
+                        <DollarSign className="h-4 w-4 text-blue-600 shrink-0" />
+                        <span>{job.salaryRange || "Negotiable"}</span>
+                      </span>
                     </div>
                   </div>
-
-                  <p className="text-xs text-gray-500 mt-4 leading-relaxed line-clamp-2 font-light">
-                    {job.description}
-                  </p>
-
-                  <div className="flex flex-wrap gap-4 mt-6 text-xs text-gray-500 pt-4 border-t border-gray-100 font-medium">
-                    <span className="flex items-center space-x-1.5">
-                      <MapPin className="h-4 w-4 text-navy-800" />
-                      <span>{job.country}</span>
-                    </span>
-                    <span className="flex items-center space-x-1.5">
-                      <Layers className="h-4 w-4 text-navy-800" />
-                      <span>{job.sector}</span>
-                    </span>
-                    <span className="flex items-center space-x-1.5">
-                      <DollarSign className="h-4 w-4 text-navy-800" />
-                      <span>{job.salaryRange || "Negotiable"}</span>
-                    </span>
-                  </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
         </div>
 
         {/* Right Side: Detailed Detail Panel & Alert Subscriptions */}
-        <div className="lg:col-span-4 space-y-6">
+        <div className="lg:col-span-5 space-y-6">
           
           {/* Detailed Job Description Card */}
           {selectedJob ? (
-            <div className="bg-white border border-gray-250 rounded-xl p-6 sm:p-8 shadow-lg space-y-6">
+            <div className="bg-white border border-gray-150 rounded-[28px] p-6 sm:p-8 shadow-enterprise space-y-6">
               <div className="border-b border-gray-100 pb-4">
-                <span className="bg-navy-900 text-gold-500 text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 rounded">
+                <span className="bg-[#0B3D91]/10 text-[#0B3D91] text-[9px] uppercase font-bold tracking-widest px-3 py-1 rounded-full border border-blue-500/5">
                   {selectedJob.sector}
                 </span>
-                <h2 className="font-serif text-xl font-bold text-navy-900 mt-3">{selectedJob.title}</h2>
-                <p className="text-xs text-gray-400 font-semibold mt-1">{selectedJob.employer.companyName}</p>
+                <h2 className="font-headline text-lg sm:text-xl font-extrabold text-navy-900 mt-3 leading-snug">{selectedJob.title}</h2>
+                <p className="text-xs text-gray-450 font-bold mt-1">{selectedJob.employer.companyName}</p>
               </div>
 
               {applyMessage && (
                 <div
-                  className={`p-3 rounded border text-xs flex items-start space-x-2 ${
+                  className={`p-3.5 rounded-xl border text-xs flex items-start space-x-2 ${
                     applyMessage.isError
                       ? "bg-red-50 border-red-200 text-red-750"
-                      : "bg-green-50 border-green-200 text-green-705"
+                      : "bg-green-50 border-green-200 text-green-700"
                   }`}
                 >
                   {applyMessage.isError ? (
@@ -520,47 +530,47 @@ export default function CompleteJobPortal() {
                 </div>
               )}
 
-              <div className="space-y-4 text-xs text-gray-600 leading-relaxed font-light">
+              <div className="space-y-5 text-xs text-gray-650 leading-relaxed font-light">
                 <div>
-                  <h4 className="font-bold text-navy-900 uppercase tracking-widest mb-1.5">Overview</h4>
+                  <h4 className="font-bold text-[#051B3D] uppercase tracking-widest mb-1.5 font-headline">Overview</h4>
                   <p>{selectedJob.description}</p>
                 </div>
                 <div>
-                  <h4 className="font-bold text-navy-900 uppercase tracking-widest mb-1.5">Qualifications & Experience</h4>
+                  <h4 className="font-bold text-[#051B3D] uppercase tracking-widest mb-1.5 font-headline">Qualifications &amp; Experience</h4>
                   <p>{selectedJob.requirements}</p>
                 </div>
                 {selectedJob.benefits && (
                   <div>
-                    <h4 className="font-bold text-navy-900 uppercase tracking-widest mb-1.5">Benefits package</h4>
+                    <h4 className="font-bold text-[#051B3D] uppercase tracking-widest mb-1.5 font-headline">Benefits Package</h4>
                     <p>{selectedJob.benefits}</p>
                   </div>
                 )}
               </div>
 
               {/* Structural Details Table */}
-              <div className="bg-luxury-light rounded-lg p-4 border border-gray-200 grid grid-cols-2 gap-3 text-xs">
+              <div className="bg-slate-50 rounded-2xl p-4.5 border border-gray-150 grid grid-cols-2 gap-4 text-xs font-headline">
                 <div>
-                  <span className="text-gray-400 block font-semibold">Location</span>
-                  <span className="text-navy-900 font-bold">{selectedJob.country}</span>
+                  <span className="text-gray-400 block font-semibold text-[10px] uppercase">Location</span>
+                  <span className="text-navy-900 font-extrabold">{selectedJob.country}</span>
                 </div>
                 <div>
-                  <span className="text-gray-400 block font-semibold">Salary Range</span>
-                  <span className="text-navy-900 font-bold">{selectedJob.salaryRange || "Negotiable"}</span>
+                  <span className="text-gray-400 block font-semibold text-[10px] uppercase">Salary Range</span>
+                  <span className="text-navy-900 font-extrabold">{selectedJob.salaryRange || "Negotiable"}</span>
                 </div>
                 <div>
-                  <span className="text-gray-400 block font-semibold">Vacancies</span>
-                  <span className="text-navy-900 font-bold">{selectedJob.vacancies} Positions</span>
+                  <span className="text-gray-400 block font-semibold text-[10px] uppercase">Vacancies</span>
+                  <span className="text-navy-900 font-extrabold">{selectedJob.vacancies} Positions</span>
                 </div>
                 <div>
-                  <span className="text-gray-400 block font-semibold">Job Type</span>
-                  <span className="text-navy-900 font-bold">Full-Time / Direct</span>
+                  <span className="text-gray-400 block font-semibold text-[10px] uppercase">Job Type</span>
+                  <span className="text-navy-900 font-extrabold">Full-Time / Direct</span>
                 </div>
               </div>
 
               <button
                 onClick={() => handleApply(selectedJob.id)}
                 disabled={applying}
-                className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-bold uppercase tracking-wider py-4 rounded-lg flex items-center justify-center space-x-2 text-xs shadow-lg hover:shadow-gold-500/10 cursor-pointer disabled:opacity-50 font-sans"
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-4 rounded-full flex items-center justify-center space-x-2 text-xs shadow-lg hover:shadow-blue-500/10 cursor-pointer disabled:opacity-50 font-headline border border-blue-500/20 hover:-translate-y-0.5 transition-all"
               >
                 {applying ? (
                   <RefreshCw className="h-4.5 w-4.5 animate-spin" />
@@ -573,18 +583,18 @@ export default function CompleteJobPortal() {
               </button>
             </div>
           ) : (
-            <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-gray-400 space-y-3">
-              <Briefcase className="h-8 w-8 text-gold-500 mx-auto" />
-              <h3 className="font-serif font-bold text-navy-900 text-sm">Select a Vacancy</h3>
-              <p className="text-xs font-light">Pick an active campaign card from the left listing feed to view full requirements and begin Easy Apply.</p>
+            <div className="bg-white border border-gray-150 rounded-[28px] p-8 text-center text-gray-400 space-y-3 shadow-enterprise">
+              <Briefcase className="h-10 w-10 text-blue-500 mx-auto" />
+              <h3 className="font-headline font-bold text-navy-900 text-sm">Select a Vacancy</h3>
+              <p className="text-xs font-light">Pick an active campaign card from the listing feed to view full requirements and begin Easy Apply.</p>
             </div>
           )}
 
           {/* Job Alerts Form */}
-          <div className="bg-navy-900 border border-gold-500/20 text-white rounded-xl p-6 shadow-sm space-y-4">
-            <div className="flex items-center space-x-2.5 pb-2 border-b border-gold-500/10">
-              <Bell className="h-5 w-5 text-gold-500" />
-              <h3 className="font-serif text-sm font-bold text-gold-500 tracking-wider">Configure Job Alerts</h3>
+          <div className="bg-navy-950 border border-white/5 text-white rounded-[28px] p-6 shadow-2xl space-y-4">
+            <div className="flex items-center space-x-2.5 pb-2.5 border-b border-white/5">
+              <Bell className="h-5 w-5 text-blue-500" />
+              <h3 className="font-headline text-sm font-extrabold text-blue-500 tracking-wider uppercase">Configure Job Alerts</h3>
             </div>
 
             <p className="text-[10px] text-gray-300 font-light leading-relaxed">
@@ -592,33 +602,33 @@ export default function CompleteJobPortal() {
             </p>
 
             {alertSuccess && (
-              <div className="p-3 bg-green-950/20 border border-green-800 text-green-450 rounded text-[11px] font-semibold">
+              <div className="p-3 bg-emerald-950/20 border border-emerald-800 text-emerald-450 rounded-xl text-[11px] font-semibold">
                 Job alert subscription configured successfully!
               </div>
             )}
 
             {!alertSuccess && (
-              <form onSubmit={handleAlertSetup} className="space-y-3 text-xs text-navy-900 font-semibold">
+              <form onSubmit={handleAlertSetup} className="space-y-3.5 text-xs text-navy-900 font-semibold">
                 <input
                   type="email"
                   required
                   placeholder="name@email.com"
                   value={alertEmail}
                   onChange={(e) => setAlertEmail(e.target.value)}
-                  className="w-full bg-navy-850 border border-gold-500/20 text-white rounded p-2.5 outline-none focus:border-gold-500"
+                  className="w-full bg-[#03132B] border border-white/5 text-white rounded-xl p-3 outline-none focus:border-blue-500 font-medium font-sans"
                 />
 
                 <select
                   required
                   value={alertSector}
                   onChange={(e) => setAlertSector(e.target.value)}
-                  className="w-full bg-navy-850 border border-gold-500/20 text-white rounded p-2.5 outline-none focus:border-gold-500 cursor-pointer font-medium"
+                  className="w-full bg-[#03132B] border border-white/5 text-white rounded-xl p-3 outline-none focus:border-blue-500 cursor-pointer font-bold font-sans"
                 >
                   <option value="" disabled className="text-gray-400">
                     Select Industry Sector
                   </option>
                   {sectors.map((s) => (
-                    <option key={s} value={s}>
+                    <option key={s} value={s} className="text-navy-900">
                       {s}
                     </option>
                   ))}
@@ -626,7 +636,7 @@ export default function CompleteJobPortal() {
 
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-bold uppercase tracking-wider py-2.5 rounded text-[10px] shadow transition-colors cursor-pointer"
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-3 rounded-full text-[10px] shadow transition-colors cursor-pointer border border-blue-500/20 hover:-translate-y-0.5"
                 >
                   Setup Alert
                 </button>

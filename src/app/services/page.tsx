@@ -14,7 +14,8 @@ import {
   Heart,
   Hammer,
   Truck,
-  ArrowRight,
+  ChevronRight,
+  Sparkles,
 } from "lucide-react";
 
 const SERVICES_LIST = [
@@ -94,18 +95,25 @@ const SERVICES_LIST = [
 
 export default function ServicesDirectoryPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-luxury-light">
+    <div className="flex flex-col min-h-screen bg-slate-50 text-navy-900 font-sans">
       <Navbar />
 
       {/* Header Banner */}
-      <section className="bg-navy-900 text-white py-20 text-center border-b border-gold-500/20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.08),transparent_65%)] pointer-events-none" />
+      <section className="bg-[#051B3D] text-white py-24 text-center relative overflow-hidden">
+        {/* Abstract design elements */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.1),transparent_70%)] pointer-events-none" />
+        
         <div className="max-w-7xl mx-auto px-4 relative z-10 space-y-4">
-          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gold-500 tracking-wider">
+          <div className="inline-flex items-center space-x-2 bg-blue-600/10 border border-blue-500/20 px-4 py-1.5 rounded-full text-blue-400 text-[10px] font-bold uppercase tracking-widest font-headline">
+            <Sparkles className="h-3.5 w-3.5 text-gold-500" />
+            <span>Manpower Services Directory</span>
+          </div>
+          <h1 className="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
             Our Recruitment Services
           </h1>
-          <p className="text-xs sm:text-sm text-gray-300 font-light max-w-xl mx-auto uppercase tracking-widest">
-            Complete Talent solutions from sourcing to visa stamping
+          <p className="text-xs sm:text-sm text-gray-300 font-light max-w-xl mx-auto uppercase tracking-widest leading-relaxed">
+            Complete Talent solutions from source search to consulate stamping
           </p>
         </div>
       </section>
@@ -118,25 +126,25 @@ export default function ServicesDirectoryPage() {
             return (
               <div
                 key={svc.slug}
-                className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all flex flex-col justify-between h-72 group"
+                className="bg-white border border-gray-150 rounded-[24px] p-8 shadow-enterprise hover:-translate-y-1 hover:shadow-lg hover:border-blue-500/25 transition-all duration-300 flex flex-col justify-between h-80 group"
               >
                 <div className="space-y-4">
-                  <div className="h-10 w-10 bg-navy-900 text-gold-500 rounded-lg flex items-center justify-center">
-                    <Icon className="h-5 w-5" />
+                  <div className="h-12 w-12 bg-blue-600/5 text-blue-650 border border-blue-500/10 rounded-xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 shrink-0">
+                    <Icon className="h-6 w-6" />
                   </div>
-                  <h3 className="font-serif text-lg font-bold text-navy-900 group-hover:text-gold-600 transition-colors">
+                  <h3 className="font-headline text-base font-bold text-navy-900 group-hover:text-blue-600 transition-colors">
                     {svc.title}
                   </h3>
                   <p className="text-xs text-gray-500 font-light leading-relaxed">{svc.desc}</p>
                 </div>
 
-                <div className="pt-6 border-t border-gray-100 flex justify-end">
+                <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
                   <Link
                     href={`/services/${svc.slug}`}
-                    className="text-xs font-bold text-gold-600 uppercase tracking-widest flex items-center space-x-1 hover:underline"
+                    className="inline-flex items-center space-x-1 text-blue-600 font-bold uppercase tracking-widest text-[10px] hover:underline"
                   >
                     <span>Read Details</span>
-                    <ArrowRight className="h-4 w-4" />
+                    <ChevronRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
               </div>
