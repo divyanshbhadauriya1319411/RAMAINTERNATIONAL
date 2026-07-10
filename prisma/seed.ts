@@ -8,10 +8,7 @@ async function main() {
 
   // Clean existing tables in correct order
   console.log("Cleaning existing database tables...");
-  await prisma.activityLog.deleteMany({});
-  await prisma.notification.deleteMany({});
-  await prisma.savedJob.deleteMany({});
-  await prisma.document.deleteMany({});
+
   await prisma.interview.deleteMany({});
   await prisma.application.deleteMany({});
   await prisma.job.deleteMany({});
@@ -262,32 +259,7 @@ async function main() {
       });
     }
 
-    // Add Saved Job
-    await prisma.savedJob.create({
-      data: {
-        candidateId: candidateProfiles[i].id,
-        jobId: jobs[i + 5].id
-      }
-    });
 
-    // Create Candidate Document
-    await prisma.document.create({
-      data: {
-        candidateId: candidateProfiles[i].id,
-        type: "RESUME",
-        fileUrl: "/uploads/resumes/dummy_cv.pdf",
-        fileName: `${candidateProfiles[i].fullName}_CV.pdf`
-      }
-    });
-
-    // Create Notification for User
-    await prisma.notification.create({
-      data: {
-        userId: candidateProfiles[i].userId,
-        title: "Application Received",
-        message: `Your application for ${jobs[i].title} has been received successfully.`
-      }
-    });
   }
 
   console.log("Creating inquiries...");
