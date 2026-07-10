@@ -1,5 +1,5 @@
 /**
- * RAMA INTERNATIONAL - AI Cognitive Sourcing Engine
+ * RAMA INTERNATIONAL-INDIA - AI Cognitive Sourcing Engine
  * Lightweight high-performance heuristics simulated engine.
  * Ready for easy hookup to OpenAI/Gemini/Anthropic API keys.
  */
@@ -87,7 +87,7 @@ export function generateJobDescriptionAI(title: string, sector: string, country:
 }
 
 export function generateOutreachEmailAI(candidateName: string, jobTitle: string, companyName: string): string {
-  return `Subject: Interview Selection Drive - RAMA INTERNATIONAL-INDIA\n\nDear ${candidateName},\n\nWe reviewed your credentials and found excellent alignment with our active campaign: ${jobTitle} at ${companyName}.\n\nYour profile has been advanced to our physical trade yard testing phase in Delhi/Mumbai. Please verify your passport details on the portal.\n\nWarm regards,\nDeepak Chauhan\nRAMA INTERNATIONAL`;
+  return `Subject: Interview Selection Drive - RAMA INTERNATIONAL-INDIA\n\nDear ${candidateName},\n\nWe reviewed your credentials and found excellent alignment with our active campaign: ${jobTitle} at ${companyName}.\n\nYour profile has been advanced to our physical trade yard testing phase in Delhi/Mumbai. Please verify your passport details on the portal.\n\nWarm regards,\nDeepak Chauhan\nRAMA INTERNATIONAL-INDIA`;
 }
 
 export function getHiringInsightsAI(): { pipelineSpeed: string; bottlenecks: string[]; recommendations: string[] } {

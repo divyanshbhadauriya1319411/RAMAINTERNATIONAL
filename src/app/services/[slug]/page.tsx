@@ -3,10 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { useLanguage } from "@/context/LanguageContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import SchemaMarkup from "@/components/seo/SchemaMarkup";
+import { SERVICES_DATA_HI } from "./servicesDataHi";
 import {
   ChevronRight,
   CheckCircle,
@@ -36,7 +39,7 @@ const SERVICES_DATA: Record<string, ServiceData> = {
     title: "Permanent Recruitment",
     tagline: "Secure long-term stability with premium Indian professionals.",
     overview:
-      "Permanent Recruitment is the foundation of structural corporate growth. At RAMA INTERNATIONAL, we connect leading multinational employers with pre-screened, highly qualified Indian professionals for permanent roles. Our deep database of over 100,000 active CVs and rigorous interviewing frameworks ensure candidate-client alignment.",
+      "Permanent Recruitment is the foundation of structural corporate growth. At RAMA INTERNATIONAL-INDIA, we connect leading multinational employers with pre-screened, highly qualified Indian professionals for permanent roles. Our deep database of over 100,000 active CVs and rigorous interviewing frameworks ensure candidate-client alignment.",
     benefits: [
       "Rigorous practical skill evaluations at our Delhi & Mumbai yards.",
       "Access to premium passive talent pools not visible on standard boards.",
@@ -136,7 +139,7 @@ const SERVICES_DATA: Record<string, ServiceData> = {
     title: "Bulk Hiring",
     tagline: "Large-scale mobilization campaigns for heavy industries.",
     overview:
-      "Mobilizing hundreds of workers for infrastructure, oil & gas, or manufacturing projects requires robust logistical systems. RAMA INTERNATIONAL coordinates large-scale campaigns, organizing testing yards, biometric collections, Wafid medicals, and group visa stampings.",
+      "Mobilizing hundreds of workers for infrastructure, oil & gas, or manufacturing projects requires robust logistical systems. RAMA INTERNATIONAL-INDIA coordinates large-scale campaigns, organizing testing yards, biometric collections, Wafid medicals, and group visa stampings.",
     benefits: [
       "Single-source management for major project manpower needs.",
       "Substantial cost optimizations on visa and flight packages.",
@@ -169,7 +172,7 @@ const SERVICES_DATA: Record<string, ServiceData> = {
     title: "International Recruitment",
     tagline: "Bridging the gap between Indian talent and global giants.",
     overview:
-      "International recruitment is our core competency. Since 2018, RAMA INTERNATIONAL has mobilized thousands of workers. We connect international employers with qualified candidates in India and handle all MEA, embassy, and consulate compliance.",
+      "International recruitment is our core competency. Since 2018, RAMA INTERNATIONAL-INDIA has mobilized thousands of workers. We connect international employers with qualified candidates in India and handle all MEA, embassy, and consulate compliance.",
     benefits: [
       "100% compliance with MEA eMigrate portal regulations.",
       "Established networks with consulates in New Delhi & Mumbai.",
@@ -435,8 +438,13 @@ export default function ServiceDetailPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
+  const { language } = useLanguage();
   const [data, setData] = useState<ServiceData | null>(null);
   const [activeFAQ, setActiveFAQ] = useState<number | null>(null);
+
+  const t = useTranslations("servicesPage");
+  const tForm = useTranslations("callbackForm");
+  const tNavbar = useTranslations("navbar");
 
   // Lead capture states
   const [inqName, setInqName] = useState("");
@@ -447,14 +455,14 @@ export default function ServiceDetailPage() {
 
   useEffect(() => {
     if (slug) {
-      const serviceInfo = SERVICES_DATA[slug];
+      const serviceInfo = language === "hi" ? SERVICES_DATA_HI[slug] : SERVICES_DATA[slug];
       if (serviceInfo) {
         setData(serviceInfo);
       } else {
         router.push("/services");
       }
     }
-  }, [slug]);
+  }, [slug, language]);
 
   const handleInquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -485,19 +493,19 @@ export default function ServiceDetailPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-luxury-light text-xs font-semibold text-navy-900">
+      <div className="min-h-screen flex items-center justify-center bg-luxury-light dark:bg-navy-950 text-xs font-semibold text-navy-900 dark:text-white transition-colors duration-200">
         <RefreshCw className="h-5 w-5 animate-spin text-gold-500 mr-2" />
-        <span>Resolving service credentials...</span>
+        <span>{t("resolving")}</span>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen bg-white dark:bg-navy-950 text-navy-900 dark:text-white transition-colors duration-200 overflow-x-hidden">
       <SchemaMarkup type="Organization" data={{}} />
       <SchemaMarkup type="LocalBusiness" data={{}} />
       <Navbar />
-      <Breadcrumbs items={[{ label: "Services", href: "/services" }, { label: data.title, href: `/services/${slug}` }]} />
+      <Breadcrumbs items={[{ label: tNavbar("services"), href: "/services" }, { label: data.title, href: `/services/${slug}` }]} />
 
       {/* 1. Hero Section */}
       <section className="relative bg-gradient-to-br from-navy-950 via-navy-900 to-navy-800 text-white py-24 sm:py-32 overflow-hidden border-b-2 border-gold-500">
@@ -508,11 +516,11 @@ export default function ServiceDetailPage() {
             className="inline-flex items-center space-x-1.5 text-xs font-bold text-gold-500 hover:text-gold-400 uppercase tracking-widest"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Back to Services</span>
+            <span>{t("backLink")}</span>
           </Link>
 
           <div className="space-y-2">
-            <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gold-500 tracking-wider">
+            <h1 className="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gold-500 tracking-wider">
               {data.title}
             </h1>
             <p className="text-sm sm:text-base text-gray-300 font-light max-w-2xl leading-relaxed">
@@ -526,17 +534,17 @@ export default function ServiceDetailPage() {
         {/* 2. Overview & Benefits */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           <div className="space-y-6">
-            <h2 className="font-serif text-xl sm:text-2xl font-bold text-navy-900 pb-2 border-b border-gray-150">
-              Service Overview
+            <h2 className="font-headline text-xl sm:text-2xl font-bold text-navy-900 dark:text-white pb-2 border-b border-gray-150 dark:border-white/5">
+              {t("serviceOverview")}
             </h2>
-            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-light">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-light">
               {data.overview}
             </p>
           </div>
 
-          <div className="bg-luxury-light border border-gray-200 rounded-2xl p-6 sm:p-8 space-y-6">
-            <h3 className="font-serif text-md font-bold text-navy-900">Key Business Benefits</h3>
-            <ul className="space-y-3.5 text-xs text-gray-600 font-light">
+          <div className="bg-slate-50 dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 sm:p-8 space-y-6">
+            <h3 className="font-headline text-md font-bold text-navy-900 dark:text-white">{t("keyBenefits")}</h3>
+            <ul className="space-y-3.5 text-xs text-gray-600 dark:text-gray-400 font-light">
               {data.benefits.map((benefit, idx) => (
                 <li key={idx} className="flex items-start space-x-3">
                   <CheckCircle className="h-5 w-5 text-gold-500 shrink-0 mt-0.5" />
@@ -550,16 +558,16 @@ export default function ServiceDetailPage() {
         {/* 3. Process & Industries Served */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           <div className="space-y-6">
-            <h2 className="font-serif text-xl sm:text-2xl font-bold text-navy-900 pb-2 border-b border-gray-150">
-              Recruitment Blueprint
+            <h2 className="font-headline text-xl sm:text-2xl font-bold text-navy-900 dark:text-white pb-2 border-b border-gray-150 dark:border-white/5">
+              {t("blueprint")}
             </h2>
-            <div className="space-y-4 text-xs font-light text-gray-600">
+            <div className="space-y-4 text-xs font-light text-gray-600 dark:text-gray-400">
               {data.process.map((step, idx) => (
-                <div key={idx} className="flex items-start space-x-4 bg-luxury-light border border-gray-150 p-4 rounded-xl">
-                  <span className="font-serif text-2xl font-extrabold text-gold-500/20 mt-0.5">0{idx + 1}</span>
+                <div key={idx} className="flex items-start space-x-4 bg-slate-50 dark:bg-navy-900/40 border border-gray-150 dark:border-white/5 p-4 rounded-xl">
+                  <span className="font-headline text-2xl font-extrabold text-gold-500/20 mt-0.5">0{idx + 1}</span>
                   <div>
-                    <h4 className="font-bold text-navy-900 mb-1">{step.split(" - ")[0]}</h4>
-                    <p className="text-[11px] text-gray-500 leading-relaxed">{step.split(" - ")[1] || step}</p>
+                    <h4 className="font-bold text-navy-900 dark:text-white mb-1">{step.split(" - ")[0]}</h4>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">{step.split(" - ")[1] || step}</p>
                   </div>
                 </div>
               ))}
@@ -567,12 +575,12 @@ export default function ServiceDetailPage() {
           </div>
 
           <div className="space-y-6">
-            <h2 className="font-serif text-xl sm:text-2xl font-bold text-navy-900 pb-2 border-b border-gray-150">
-              Sectors Served
+            <h2 className="font-headline text-xl sm:text-2xl font-bold text-navy-900 dark:text-white pb-2 border-b border-gray-150 dark:border-white/5">
+              {t("sectorsServed")}
             </h2>
-            <div className="grid grid-cols-2 gap-4 text-xs text-navy-900 text-center font-bold">
+            <div className="grid grid-cols-2 gap-4 text-xs text-navy-900 dark:text-white text-center font-bold font-headline">
               {data.industries.map((ind, idx) => (
-                <div key={idx} className="bg-luxury-light border border-gray-150 rounded-xl p-5 hover:border-gold-500 transition-colors">
+                <div key={idx} className="bg-slate-50 dark:bg-navy-900/40 border border-gray-150 dark:border-white/5 rounded-xl p-5 hover:border-gold-500 transition-colors">
                   <span>{ind}</span>
                 </div>
               ))}
@@ -582,23 +590,23 @@ export default function ServiceDetailPage() {
 
         {/* 4. FAQs Section */}
         <section className="space-y-6 max-w-4xl mx-auto">
-          <h2 className="font-serif text-xl sm:text-2xl font-bold text-navy-900 text-center pb-2 border-b border-gray-150">
-            Frequently Asked Questions
+          <h2 className="font-headline text-xl sm:text-2xl font-bold text-navy-900 dark:text-white text-center pb-2 border-b border-gray-150 dark:border-white/5">
+            {t("faqsTitle")}
           </h2>
-          <div className="space-y-4 text-xs font-medium">
+          <div className="space-y-4 text-xs font-medium font-sans">
             {data.faqs.map((faq, idx) => {
               const isOpen = activeFAQ === idx;
               return (
-                <div key={idx} className="border border-gray-200 rounded-xl p-5 select-none transition-all">
+                <div key={idx} className="border border-gray-200 dark:border-white/5 rounded-xl p-5 select-none transition-all">
                   <div
                     onClick={() => setActiveFAQ(isOpen ? null : idx)}
-                    className="flex justify-between items-center cursor-pointer font-bold text-navy-900 text-sm"
+                    className="flex justify-between items-center cursor-pointer font-bold text-navy-900 dark:text-white text-sm font-headline"
                   >
                     <span>{faq.q}</span>
                     <span className="text-gold-500 font-bold">{isOpen ? "−" : "+"}</span>
                   </div>
                   {isOpen && (
-                    <p className="mt-4 text-gray-500 leading-relaxed font-light pt-4 border-t border-gray-100">
+                    <p className="mt-4 text-gray-500 dark:text-gray-400 leading-relaxed font-light pt-4 border-t border-gray-100 dark:border-white/5">
                       {faq.a}
                     </p>
                   )}
@@ -610,21 +618,21 @@ export default function ServiceDetailPage() {
 
         {/* 5. Related Services */}
         <section className="space-y-6">
-          <h2 className="font-serif text-xl sm:text-2xl font-bold text-navy-900 pb-2 border-b border-gray-150">
-            Related Recruitment Solutions
+          <h2 className="font-headline text-xl sm:text-2xl font-bold text-navy-900 dark:text-white pb-2 border-b border-gray-150 dark:border-white/5">
+            {t("relatedTitle")}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {data.related.map((rel) => (
-              <div key={rel.slug} className="bg-luxury-light border border-gray-150 rounded-xl p-6 hover:border-gold-500 transition-colors flex justify-between items-center">
+              <div key={rel.slug} className="bg-slate-50 dark:bg-navy-900/40 border border-gray-150 dark:border-white/5 rounded-xl p-6 hover:border-gold-500 transition-colors flex justify-between items-center text-navy-900 dark:text-white">
                 <div>
-                  <h4 className="font-serif text-sm font-bold text-navy-900">{rel.title}</h4>
-                  <p className="text-[10px] text-gray-400 font-light mt-0.5">Explore alternate recruitment workflows</p>
+                  <h4 className="font-headline text-sm font-bold text-navy-900 dark:text-white">{rel.title}</h4>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-400 font-light mt-0.5">{t("relatedDesc")}</p>
                 </div>
                 <Link
                   href={`/services/${rel.slug}`}
-                  className="text-xs font-bold text-gold-600 uppercase tracking-widest flex items-center space-x-0.5 hover:underline"
+                  className="text-xs font-bold text-gold-605 dark:text-gold-450 uppercase tracking-widest flex items-center space-x-0.5 hover:underline font-headline"
                 >
-                  <span>Explore</span>
+                  <span>{t("explore")}</span>
                   <ChevronRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -635,11 +643,11 @@ export default function ServiceDetailPage() {
         {/* 6. CTA & Call-back Request */}
         <section className="bg-navy-900 rounded-2xl border border-gold-500/25 p-8 sm:p-12 text-white shadow-xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-4">
-            <h3 className="font-serif text-xl sm:text-2xl font-bold text-gold-500 tracking-wider">
-              Ready to Partner with RAMA?
+            <h3 className="font-headline text-xl sm:text-2xl font-bold text-gold-500 tracking-wider">
+              {t("ctaTitle")}
             </h3>
             <p className="text-xs text-gray-300 leading-relaxed font-light">
-              Submit your corporate inquiry details below. A RAMA client relations manager will contact you within 24 business hours.
+              {t("ctaDesc")}
             </p>
           </div>
 
@@ -648,57 +656,57 @@ export default function ServiceDetailPage() {
               <div className="p-4 bg-green-950/20 border border-green-800 text-green-400 rounded-lg text-xs flex items-start space-x-2">
                 <CheckCircle className="h-5 w-5 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold">Callback logged successfully!</p>
-                  <p className="mt-1">We will reach out to your office shortly.</p>
+                  <p className="font-bold">{t("successTitle")}</p>
+                  <p className="mt-1">{t("successDesc")}</p>
                 </div>
               </div>
             ) : (
               <form onSubmit={handleInquirySubmit} className="space-y-3.5 text-xs text-white">
                 <div>
-                  <label className="block mb-1 text-gray-300 font-semibold">Contact Name *</label>
+                  <label className="block mb-1 text-gray-300 font-semibold">{tForm("name")} *</label>
                   <input
                     type="text"
                     required
                     value={inqName}
                     onChange={(e) => setInqName(e.target.value)}
-                    placeholder="e.g. John Doe"
-                    className="w-full bg-navy-900 border border-gold-500/20 text-white rounded p-2.5 outline-none focus:border-gold-500"
+                    placeholder={t("placeholderName")}
+                    className="w-full bg-navy-900 border border-gold-500/20 text-white rounded p-2.5 outline-none focus:border-gold-500 font-sans"
                   />
                 </div>
                 <div>
-                  <label className="block mb-1 text-gray-300 font-semibold">Corporate Email *</label>
+                  <label className="block mb-1 text-gray-300 font-semibold">{tForm("email")} *</label>
                   <input
                     type="email"
                     required
                     value={inqEmail}
                     onChange={(e) => setInqEmail(e.target.value)}
-                    placeholder="e.g. j.doe@company.com"
-                    className="w-full bg-navy-900 border border-gold-500/20 text-white rounded p-2.5 outline-none focus:border-gold-500"
+                    placeholder={t("placeholderEmail")}
+                    className="w-full bg-navy-900 border border-gold-500/20 text-white rounded p-2.5 outline-none focus:border-gold-500 font-sans"
                   />
                 </div>
                 <div>
-                  <label className="block mb-1 text-gray-300 font-semibold">Requirement Summary *</label>
+                  <label className="block mb-1 text-gray-300 font-semibold">{tForm("message")} *</label>
                   <textarea
                     rows={3}
                     required
                     value={inqMsg}
                     onChange={(e) => setInqMsg(e.target.value)}
-                    placeholder="Outline number of workers needed, trade testing parameters, etc..."
-                    className="w-full bg-navy-900 border border-gold-500/20 text-white rounded p-2.5 outline-none focus:border-gold-500 resize-none"
+                    placeholder={t("placeholderMsg")}
+                    className="w-full bg-navy-900 border border-gold-500/20 text-white rounded p-2.5 outline-none focus:border-gold-500 resize-none font-sans"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={inqLoading}
-                  className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-bold uppercase tracking-wider py-3 rounded flex items-center justify-center space-x-2 text-[10px] shadow-lg transition-all cursor-pointer disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-bold uppercase tracking-wider py-3 rounded flex items-center justify-center space-x-2 text-[10px] shadow-lg transition-all cursor-pointer disabled:opacity-50 font-headline"
                 >
                   {inqLoading ? (
                     <RefreshCw className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
                       <Send className="h-3.5 w-3.5" />
-                      <span>Submit Request</span>
+                      <span>{t("submitRequest")}</span>
                     </>
                   )}
                 </button>

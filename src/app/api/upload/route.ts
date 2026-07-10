@@ -28,10 +28,13 @@ export async function POST(request: Request) {
     const ALLOWED_MIME_TYPES = [
       "application/pdf",
       "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "image/jpeg",
+      "image/png",
+      "image/webp"
     ];
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: "Invalid file type. Only PDF and Word documents are permitted." }, { status: 400 });
+      return NextResponse.json({ error: "Invalid file type. Only PDF, Word documents, and images (JPEG/PNG/WEBP) are permitted." }, { status: 400 });
     }
 
     const arrayBuffer = await file.arrayBuffer();

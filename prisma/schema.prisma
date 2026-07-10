@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -9,14 +9,36 @@ generator client {
 
 // User model for role-based authentication (ADMIN, EMPLOYER, CANDIDATE)
 model User {
-  id           String           @id @default(uuid())
-  email        String           @unique
-  passwordHash String
-  role         String           // "ADMIN", "EMPLOYER", "CANDIDATE"
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  candidate    CandidateProfile?
-  employer     EmployerProfile?
+  id                String           @id @default(uuid())
+  email             String           @unique
+  passwordHash      String
+  role              Role
+  emailVerified     DateTime?
+  verificationToken String?
+  isDeleted         Boolean          @default(false)
+  deletedAt         DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  
+  candidate         CandidateProfile?
+  employer          EmployerProfile?
+  admin             AdminProfile?
+  notifications     Notification[]
+  activityLogs      ActivityLog[]
+
+  @@index([email])
+}
+
+// Profile for Admin users
+model AdminProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 // Profile for Candidate users
@@ -35,7 +57,14 @@ model CandidateProfile {
   education       String?
   location        String?
   status          String        @default("ACTIVE") // "ACTIVE", "PLACED", "INACTIVE"
+  isDeleted       Boolean       @default(false)
+  deletedAt       DateTime?
+  
   applications    Application[]
+  savedJobs       SavedJob[]
+  documents       Document[]
+
+  @@index([userId])
 }
 
 // Profile for Employer users
@@ -50,72 +79,221 @@ model EmployerProfile {
   phone         String?
   address       String?
   isVerified    Boolean  @default(false)
+  isDeleted     Boolean  @default(false)
+  deletedAt     DateTime?
+  
   jobs          Job[]
+  companyId     String?
+  company       Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([companyId])
+}
+
+// Company model to support client profile groups
+model Company {
+  id          String   @id @default(uuid())
+  name        String
+  logoUrl     String?
+  website     String?
+  description String?
+  location    String?
+  employers   EmployerProfile[]
+  createdAt   DateTime @default(now())
 }
 
 // Job listing model
 model Job {
-  id           String        @id @default(uuid())
+  id           String          @id @default(uuid())
   title        String
   description  String
   requirements String
   benefits     String?
-  sector       String        // e.g., "Healthcare", "Construction", "Oil & Gas", "Hospitality", "Logistics", "Manufacturing"
-  country      String        // e.g., "Saudi Arabia", "UAE", "Qatar", "Oman", "Kuwait", "Germany", "Singapore"
+  sector       String          // e.g., "Healthcare", "Construction", "Oil & Gas", "Hospitality", "Logistics", "Manufacturing"
+  country      String          // e.g., "Saudi Arabia", "UAE", "Qatar", "Oman", "Kuwait", "Germany"
   salaryRange  String?
-  vacancies    Int           @default(1)
-  status       String        @default("OPEN") // "OPEN", "CLOSED"
+  vacancies    Int             @default(1)
+  status       JobStatus       @default(OPEN)
+  isDeleted    Boolean         @default(false)
+  deletedAt    DateTime?
   employerId   String
   employer     EmployerProfile @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  
   applications Application[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  savedBy      SavedJob[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([employerId])
+  @@index([status])
+  @@index([country])
+  @@index([sector])
+  @@index([createdAt])
 }
 
 // Application linking Candidates and Jobs
 model Application {
-  id              String   @id @default(uuid())
+  id              String            @id @default(uuid())
   jobId           String
-  job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  job             Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
   candidateId     String
-  candidate       CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  status          String   @default("APPLIED") 
-  // Stages: "APPLIED", "SHORTLISTED", "INTERVIEW_SCHEDULED", "SELECTED", "VISA_STAGE", "MOBILIZED", "REJECTED"
-  
-  visaStatus      String   @default("NOT_STARTED")
-  // Visa Stages: "NOT_STARTED", "DOCUMENT_VERIFICATION", "EMBASSY_SUBMISSION", "VISA_STAMPED", "FLIGHT_BOOKED", "DEPLOYED"
-  
-  notes           String?  // Recruiter notes/comments
+  candidate       CandidateProfile  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  status          ApplicationStatus @default(APPLIED) 
+  visaStatus      VisaStatus        @default(NOT_STARTED)
+  notes           String?           // Recruiter notes/comments
   interviewDate   DateTime?
-  interviewLink   DateTime? // Optional interview info
-  updatedAt       DateTime @updatedAt
-  createdAt       DateTime @default(now())
+  interviewLink   DateTime?         // Optional interview info
+  isDeleted       Boolean           @default(false)
+  deletedAt       DateTime?
+  
+  interviews      Interview[]
+  updatedAt       DateTime          @updatedAt
+  createdAt       DateTime          @default(now())
+
+  @@index([jobId])
+  @@index([candidateId])
+  @@index([status])
+}
+
+// Country metadata listing
+model Country {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  code      String?
+  region    String   // e.g. "Gulf Countries", "Europe", "Africa", "Australia", "Canada"
+  flagUrl   String?
+  isActive  Boolean  @default(true)
+
+  @@index([name])
+  @@index([isActive])
+}
+
+// Industry metadata listing
+model Industry {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  iconName    String?
+  isActive    Boolean  @default(true)
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+// Testimonials of global partners
+model Testimonial {
+  id        String   @id @default(uuid())
+  name      String
+  role      String
+  company   String
+  content   String
+  rating    Int      @default(5)
+  avatarUrl String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([isActive])
+}
+
+// Live notification alerts
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+// Bookmarked jobs
+model SavedJob {
+  id          String   @id @default(uuid())
+  candidateId String
+  candidate   CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([candidateId, jobId])
+  @@index([candidateId])
+  @@index([jobId])
+}
+
+// Activity auditing logs for admins
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Document repository (CV, Passports, Certifications)
+model Document {
+  id          String       @id @default(uuid())
+  candidateId String
+  candidate   CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  type        DocumentType
+  fileUrl     String
+  fileName    String
+  createdAt   DateTime     @default(now())
+
+  @@index([candidateId])
+}
+
+// Scheduled interviews
+model Interview {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  title         String
+  scheduledAt   DateTime
+  location      String?
+  notes         String?
+  status        String      @default("SCHEDULED") // "SCHEDULED", "COMPLETED", "CANCELLED"
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([applicationId])
 }
 
 // Contact form inquiries (CRM Leads)
 model Inquiry {
-  id          String   @id @default(uuid())
+  id          String        @id @default(uuid())
   name        String
   email       String
   companyName String?
   phone       String?
   message     String
-  status      String   @default("PENDING") // "PENDING", "CONTACTED", "ARCHIVED"
-  createdAt   DateTime @default(now())
+  status      InquiryStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+
+  @@index([status])
 }
 
 // Blog CMS articles
 model BlogPost {
-  id        String   @id @default(uuid())
+  id        String         @id @default(uuid())
   title     String
-  slug      String   @unique
+  slug      String         @unique
   summary   String
   content   String
-  category  String   // e.g., "Visa Update", "Industry Insights", "Hiring Tips"
-  author    String   @default("Deepak Chauhan")
-  status    String   @default("PUBLISHED") // "DRAFT", "PUBLISHED"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  category  String         // e.g., "Visa Update", "Industry Insights", "Hiring Tips"
+  author    String         @default("Deepak Chauhan")
+  status    BlogPostStatus @default(PUBLISHED)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([slug])
+  @@index([status])
 }
 
 // Gallery items
@@ -125,4 +303,55 @@ model GalleryItem {
   imageUrl    String
   category    String   // e.g., "Trade Test", "Departure", "Office", "Event"
   createdAt   DateTime @default(now())
+
+  @@index([category])
+}
+
+// Native Postgres Enums
+enum Role {
+  ADMIN
+  EMPLOYER
+  CANDIDATE
+}
+
+enum JobStatus {
+  OPEN
+  CLOSED
+}
+
+enum ApplicationStatus {
+  APPLIED
+  UNDER_REVIEW
+  SHORTLISTED
+  INTERVIEW_SCHEDULED
+  SELECTED
+  VISA_STAGE
+  MOBILIZED
+  REJECTED
+}
+
+enum VisaStatus {
+  NOT_STARTED
+  DOCUMENT_VERIFICATION
+  EMBASSY_SUBMISSION
+  VISA_STAMPED
+  FLIGHT_BOOKED
+  DEPLOYED
+}
+
+enum DocumentType {
+  RESUME
+  PASSPORT
+  CERTIFICATE
+}
+
+enum InquiryStatus {
+  PENDING
+  CONTACTED
+  ARCHIVED
+}
+
+enum BlogPostStatus {
+  DRAFT
+  PUBLISHED
 }

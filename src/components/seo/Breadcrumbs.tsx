@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ChevronRight, Home } from "lucide-react";
 
 interface BreadcrumbItem {
@@ -11,13 +12,15 @@ interface BreadcrumbsProps {
 }
 
 export default function Breadcrumbs({ items }: BreadcrumbsProps) {
+  const t = useTranslations("navbar");
+
   return (
     <nav aria-label="Breadcrumb" className="py-3 px-4 bg-luxury-light border-b border-gray-150 text-xs font-semibold text-gray-500">
       <ol className="max-w-7xl mx-auto flex items-center space-x-2">
         <li className="flex items-center">
           <Link href="/" className="hover:text-gold-600 flex items-center space-x-1">
             <Home className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Home</span>
+            <span className="hidden sm:inline">{t("home")}</span>
           </Link>
         </li>
 

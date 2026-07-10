@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Check, Clock, FileText, Send, Stamp, Plane, ShieldCheck } from "lucide-react";
 
 interface VisaTimelineProps {
@@ -10,37 +11,39 @@ interface VisaTimelineProps {
 const STAGES = [
   {
     key: "DOCUMENT_VERIFICATION",
-    label: "Document Verification",
-    description: "Recruiter checks passport validity, trade credentials, and police clearance certificates (PCC).",
+    labelKey: "stage1",
+    descKey: "stage1Desc",
     icon: FileText,
   },
   {
     key: "EMBASSY_SUBMISSION",
-    label: "Embassy Submission",
-    description: "Documents and medical reports sent to the respective GCC consulate or destination embassy.",
+    labelKey: "stage2",
+    descKey: "stage2Desc",
     icon: Send,
   },
   {
     key: "VISA_STAMPED",
-    label: "Visa Stamped",
-    description: "Consulate issues the official overseas employment stamp in the candidate's passport.",
+    labelKey: "stage3",
+    descKey: "stage3Desc",
     icon: Stamp,
   },
   {
     key: "FLIGHT_BOOKED",
-    label: "Flight Booked",
-    description: "Flight tickets booked. Travel itinerary sent and pre-departure briefing completed.",
+    labelKey: "stage4",
+    descKey: "stage4Desc",
     icon: Plane,
   },
   {
     key: "DEPLOYED",
-    label: "Mobilized & Deployed",
-    description: "Candidate reports to the international employer. Local onboarding initiated.",
+    labelKey: "stage5",
+    descKey: "stage5Desc",
     icon: ShieldCheck,
   },
 ];
 
 export default function VisaTimeline({ currentStage, notes }: VisaTimelineProps) {
+  const t = useTranslations("visaTimeline");
+  
   const getStageIndex = (stage: string) => {
     return STAGES.findIndex((s) => s.key === stage);
   };
@@ -51,15 +54,15 @@ export default function VisaTimeline({ currentStage, notes }: VisaTimelineProps)
     <div className="bg-navy-900 border border-gold-500/20 rounded-xl p-6 sm:p-8 text-white shadow-xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-gold-500/10 gap-3">
         <div>
-          <h3 className="font-serif text-lg font-bold text-gold-500 tracking-wider">Visa Processing Status</h3>
-          <p className="text-xs text-gray-400">Track your overseas immigration and mobilization timeline.</p>
+          <h3 className="font-headline text-lg font-bold text-gold-500 tracking-wider">{t("title")}</h3>
+          <p className="text-xs text-gray-400">{t("desc")}</p>
         </div>
         <div className="bg-navy-800 border border-gold-500/30 px-3.5 py-1.5 rounded-lg text-xs font-semibold uppercase text-gold-400 flex items-center space-x-1.5 animate-pulse-gold">
           <Clock className="h-3.5 w-3.5" />
           <span>
             {currentStage === "NOT_STARTED" || currentIndex === -1
-              ? "Pending Initial Clearance"
-              : STAGES[currentIndex].label}
+              ? t("pending")
+              : t(STAGES[currentIndex].labelKey as any)}
           </span>
         </div>
       </div>
@@ -98,9 +101,9 @@ export default function VisaTimeline({ currentStage, notes }: VisaTimelineProps)
                     isActive ? "text-gold-400" : isCompleted ? "text-gray-200" : "text-gray-500"
                   }`}
                 >
-                  {stage.label}
+                  {t(stage.labelKey as any)}
                 </h4>
-                <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">{stage.description}</p>
+                <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">{t(stage.descKey as any)}</p>
               </div>
             </div>
           );
@@ -109,7 +112,7 @@ export default function VisaTimeline({ currentStage, notes }: VisaTimelineProps)
 
       {notes && (
         <div className="mt-8 pt-6 border-t border-gold-500/10 bg-navy-950/40 p-4 rounded-lg border border-gold-500/5">
-          <p className="text-xs font-bold text-gold-500 uppercase tracking-widest mb-1">Recruiter Logs & Notes</p>
+          <p className="text-xs font-bold text-gold-500 uppercase tracking-widest mb-1">{t("recruiterLogs")}</p>
           <p className="text-xs text-gray-300 leading-relaxed italic">"{notes}"</p>
         </div>
       )}

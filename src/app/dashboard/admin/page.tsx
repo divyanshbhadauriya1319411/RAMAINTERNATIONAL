@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
+import PipelineBoard from "@/components/dashboard/PipelineBoard";
 import {
   Users,
   Landmark,
@@ -28,30 +32,23 @@ import {
   FileText,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import PipelineBoard from "@/components/dashboard/PipelineBoard";
-
-interface Candidate {
-  id: string;
-  fullName: string;
-  phone?: string | null;
-  passportNumber?: string | null;
-  resumeUrl?: string | null;
-  skills?: string | null;
-  experienceYears?: number | null;
-  education?: string | null;
-  location?: string | null;
-}
 
 interface Employer {
   id: string;
   companyName: string;
+  email: string;
   industry?: string | null;
-  website?: string | null;
-  contactPerson?: string | null;
-  phone?: string | null;
-  address?: string | null;
+  isVerified: boolean;
+  createdAt: string;
+}
+
+interface Candidate {
+  id: string;
+  fullName: string;
+  email: string;
+  location?: string | null;
+  passportNumber?: string | null;
+  resumeUrl?: string | null;
   isVerified: boolean;
 }
 
@@ -61,89 +58,106 @@ interface Job {
   sector: string;
   country: string;
   vacancies: number;
-  status: string;
-  createdAt: string;
   employer: {
     companyName: string;
   };
 }
 
-export default function SuperAdminPanel() {
-  const [profile, setProfile] = useState<any>(null);
-  const [applications, setApplications] = useState<any[]>([]);
-  const [inquiries, setInquiries] = useState<any[]>([]);
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
+interface Application {
+  id: string;
+  status: string;
+  visaStatus: string;
+  notes?: string | null;
+  createdAt: string;
+  interviewDate?: string | null;
+  job: {
+    title: string;
+    country: string;
+    employer: {
+      companyName: string;
+    };
+  };
+  candidate: {
+    fullName: string;
+    phone: string | null;
+    resumeUrl: string | null;
+    experienceYears: number | null;
+    skills: string | null;
+  };
+}
+
+interface Inquiry {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  companyName?: string | null;
+  message: string;
+  status: string;
+  createdAt: string;
+}
+
+export default function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState<
+    | "overview"
+    | "employers"
+    | "candidates"
+    | "jobs"
+    | "applications"
+    | "ats"
+    | "crm"
+    | "cms"
+    | "communications"
+    | "system"
+  >("overview");
+
+  // Data arrays
   const [employers, setEmployers] = useState<Employer[]>([]);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Filter States
+  const [crmFilter, setCrmFilter] = useState("ALL");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Tab routing
-  const [activeTab, setActiveTab] = useState<"overview" | "employers" | "candidates" | "jobs" | "applications" | "ats" | "crm" | "cms" | "communications" | "system">("overview");
-
-  // CRM edit states
-  const [crmFilter, setCrmFilter] = useState("ALL");
-
-  // Blog CMS states
+  // Forms
   const [blogTitle, setBlogTitle] = useState("");
   const [blogCat, setBlogCat] = useState("Visa Update");
   const [blogSummary, setBlogSummary] = useState("");
   const [blogContent, setBlogContent] = useState("");
   const [cmsMsg, setCmsMsg] = useState<string | null>(null);
 
-  // SEO configuration states
-  const [seoTitle, setSeoTitle] = useState("RAMA INTERNATIONAL | Global Recruitment");
-  const [seoKeywords, setSeoKeywords] = useState("Recruitment, Manpower, GCC Jobs, Visa Attestations");
+  const [seoTitle, setSeoTitle] = useState("RAMA INTERNATIONAL-INDIA | Leading Overseas Manpower Sourcing");
+  const [seoKeywords, setSeoKeywords] = useState("overseas recruitment, gcc jobs, trade testing india");
   const [seoMsg, setSeoMsg] = useState<string | null>(null);
 
-  const [systemStats, setSystemStats] = useState({
-    totalPlaced: 1240,
-    annualRevenue: "₹84,50,000",
-  });
+  const t = useTranslations("adminDashboard");
+  const tCountries = useTranslations("countries");
+
+  // Aggregate Stats
+  const systemStats = {
+    totalPlaced: 1242,
+    annualRevenue: "₹1.84 Crores",
+  };
 
   useEffect(() => {
     fetchAdminData();
   }, [refreshTrigger]);
 
   const fetchAdminData = async () => {
-    setLoading(true);
     try {
-      const meRes = await fetch("/api/auth/me");
-      if (meRes.ok) {
-        const meData = await meRes.json();
-        setProfile(meData.user);
+      const res = await fetch("/api/dashboard/admin");
+      if (res.ok) {
+        const data = await res.json();
+        setEmployers(data.employers || []);
+        setCandidates(data.candidates || []);
+        setJobs(data.jobs || []);
+        setApplications(data.applications || []);
+        setInquiries(data.inquiries || []);
       }
-
-      const appRes = await fetch("/api/applications");
-      if (appRes.ok) {
-        const appData = await appRes.json();
-        setApplications(appData.applications || []);
-      }
-
-      const jobsRes = await fetch("/api/jobs");
-      if (jobsRes.ok) {
-        const jobsData = await jobsRes.json();
-        setJobs(jobsData.jobs || []);
-      }
-
-      const contactRes = await fetch("/api/contact");
-      if (contactRes.ok) {
-        const contactData = await contactRes.json();
-        setInquiries(contactData.inquiries || []);
-      }
-
-      setEmployers([
-        { id: "emp-1", companyName: "Almarai Foods Group", industry: "FMCG / Manufacturing", website: "https://almarai.com", contactPerson: "Dr. Khaled Al-Mutairi", phone: "+966 11 470 0000", address: "Riyadh, Saudi Arabia", isVerified: true },
-        { id: "emp-2", companyName: "Sterling Projects GmbH", industry: "Construction", website: "https://sterling-projects.de", contactPerson: "Marc Sterling", phone: "+49 89 231456", address: "Munich, Germany", isVerified: true },
-        { id: "emp-3", companyName: "Gulf Energy Contractors", industry: "Oil & Gas", website: "https://gulfenergy.com", contactPerson: "Ahmed Al-Mansoori", phone: "+974 4455 6677", address: "Doha, Qatar", isVerified: false },
-      ]);
-
-      setCandidates([
-        { id: "cand-1", fullName: "Rahul Sharma", phone: "+91 93105 89800", passportNumber: "Z1234567", resumeUrl: "/uploads/resumes/Verified_Rahul_CV.pdf", skills: "Electrician, maintenance", experienceYears: 5, education: "ITI Diploma", location: "Delhi, India" },
-        { id: "cand-2", fullName: "Amit Kumar", phone: "+91 82879 85415", passportNumber: "Y8765432", resumeUrl: null, skills: "TIG Welder, structural piping", experienceYears: 8, education: "Vocational Certificate", location: "Mumbai, India" },
-        { id: "cand-3", fullName: "Priya Nair", phone: "+91 78397 07378", passportNumber: "X9876543", resumeUrl: "/uploads/resumes/Priya_Nursing_Resume.pdf", skills: "Staff Nurse, Critical Care ICU", experienceYears: 3, education: "B.Sc Nursing", location: "Kochi, India" },
-      ]);
-
     } catch (e) {
       console.error(e);
     } finally {
@@ -151,75 +165,136 @@ export default function SuperAdminPanel() {
     }
   };
 
-  const handleVerifyEmployer = (employerId: string) => {
-    setEmployers((prev) =>
-      prev.map((emp) => (emp.id === employerId ? { ...emp, isVerified: !emp.isVerified } : emp))
-    );
+  const handleVerifyEmployer = async (empId: string) => {
+    try {
+      const res = await fetch(`/api/dashboard/admin/verify-employer?id=${empId}`, {
+        method: "PATCH",
+      });
+      if (res.ok) {
+        fetchAdminData();
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleInquiryStatus = async (inquiryId: string, newStatus: string) => {
-    setInquiries((prev) =>
-      prev.map((inq) => (inq.id === inquiryId ? { ...inq, status: newStatus } : inq))
-    );
+  const handleVerifyCandidate = async (candId: string) => {
+    try {
+      const res = await fetch(`/api/dashboard/admin/verify-candidate?id=${candId}`, {
+        method: "PATCH",
+      });
+      if (res.ok) {
+        fetchAdminData();
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleToggleJobStatus = (jobId: string) => {
-    setJobs((prev) =>
-      prev.map((job) => (job.id === jobId ? { ...job, status: job.status === "OPEN" ? "CLOSED" : "OPEN" } : job))
-    );
+  const handleInquiryStatus = async (inqId: string, status: string) => {
+    try {
+      const res = await fetch(`/api/dashboard/admin/crm-status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: inqId, status }),
+      });
+      if (res.ok) {
+        fetchAdminData();
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleAddBlog = (e: React.FormEvent) => {
+  const handleBackupDatabase = () => {
+    alert(t("alertDbBackup"));
+  };
+
+  const handlePublishNews = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!blogTitle || !blogSummary) return;
-    setCmsMsg("New blog article published to Public CMS database!");
-    setTimeout(() => setCmsMsg(null), 4000);
+    if (!blogTitle.trim()) return;
+    alert(t("alertPublishNews").replace("{title}", blogTitle).replace("{category}", blogCat));
     setBlogTitle("");
-    setBlogSummary("");
-    setBlogContent("");
+  };
+
+  const handleAddBlog = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCmsMsg(null);
+    try {
+      const res = await fetch("/api/dashboard/admin/cms-blog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: blogTitle,
+          category: blogCat,
+          summary: blogSummary,
+          content: blogContent,
+        }),
+      });
+
+      if (res.ok) {
+        setCmsMsg(t("cmsMsgSuccess"));
+        setBlogTitle("");
+        setBlogSummary("");
+        setBlogContent("");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleSaveSEO = (e: React.FormEvent) => {
     e.preventDefault();
-    setSeoMsg("Meta tags and schema structures updated successfully!");
-    setTimeout(() => setSeoMsg(null), 4000);
+    setSeoMsg(null);
+    setTimeout(() => {
+      setSeoMsg(t("seoMsgSuccess"));
+    }, 800);
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "APPLIED":
-        return "bg-blue-50 text-blue-800 border-blue-200";
+        return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-450 dark:border-blue-800";
       case "SHORTLISTED":
-        return "bg-yellow-50 text-yellow-805 border-yellow-250";
+        return "bg-yellow-50 text-yellow-750 border-yellow-250 dark:bg-yellow-950/20 dark:text-yellow-400 dark:border-yellow-800";
       case "INTERVIEW_SCHEDULED":
-        return "bg-indigo-50 text-indigo-850 border-indigo-250";
+        return "bg-indigo-50 text-indigo-705 border-indigo-200 dark:bg-indigo-950/20 dark:text-indigo-400 dark:border-indigo-800";
       case "SELECTED":
-        return "bg-green-50 text-green-800 border-green-200";
+        return "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-400 dark:border-green-800";
       case "VISA_STAGE":
-        return "bg-amber-50 text-amber-805 border-amber-250";
+        return "bg-amber-50 text-amber-705 border-amber-250 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-800";
       case "MOBILIZED":
-        return "bg-purple-50 text-purple-800 border-purple-250";
+        return "bg-purple-50 text-purple-700 border-purple-250 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-800";
       default:
-        return "bg-gray-50 text-gray-800 border-gray-200";
+        return "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-800";
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-luxury-light dark:bg-navy-950 text-xs font-semibold text-navy-900 dark:text-white transition-colors duration-200">
+        <RefreshCw className="h-5 w-5 animate-spin text-gold-500 mr-2" />
+        <span>{t("booting")}</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col min-h-screen bg-luxury-light text-navy-900 font-sans">
+    <div className="flex flex-col min-h-screen bg-luxury-light dark:bg-navy-950 text-navy-900 dark:text-white transition-colors duration-200 overflow-x-hidden">
       <Navbar />
 
       <div className="bg-[#051B3D] text-white py-12 border-b border-blue-600/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="space-y-1">
-            <h1 className="font-serif text-2xl font-bold text-white">Super Admin Console</h1>
-            <p className="text-xs text-gray-305 font-light">Liaison and global operations oversight control board.</p>
+            <h1 className="font-headline text-2xl font-bold text-white">{t("welcomeTitle")}</h1>
+            <p className="text-xs text-gray-305 font-light">{t("welcomeDesc")}</p>
           </div>
-
-          <div className="bg-[#0B3D91] border border-blue-600/20 rounded-2xl p-3.5 flex items-center space-x-3 text-xs font-bold">
-            <Lock className="h-4.5 w-4.5 text-blue-500" />
+          
+          <div className="bg-[#0B3D91] border border-blue-600/20 rounded-2xl p-3.5 flex items-center space-x-3 text-xs">
+            <Shield className="h-4.5 w-4.5 text-blue-500" />
             <div>
               <p className="text-gray-205">Deepak Chauhan</p>
-              <p className="text-[10px] text-gray-400 font-light mt-0.5 uppercase tracking-wider">Super Administrator</p>
+              <p className="text-[10px] text-gray-400 font-light mt-0.5 uppercase tracking-wider">{t("superAdmin")}</p>
             </div>
           </div>
         </div>
@@ -228,19 +303,19 @@ export default function SuperAdminPanel() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 flex flex-col lg:flex-row gap-8">
         
         {/* Navigation Sidebar */}
-        <aside className="lg:w-60 shrink-0">
-          <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-md space-y-2 sticky top-24">
+        <aside className="lg:w-60 w-full shrink-0">
+          <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-4 shadow-md flex flex-row overflow-x-auto lg:flex-col lg:space-y-2 gap-2 scrollbar-hide sticky top-24">
             {[
-              { tab: "overview", label: "Overview Panel", icon: Grid },
-              { tab: "employers", label: "Clients list", icon: Landmark },
-              { tab: "candidates", label: "Dossiers list", icon: Users },
-              { tab: "jobs", label: "Job Campaigns", icon: Briefcase },
-              { tab: "applications", label: "Applications Tracker", icon: FileText },
-              { tab: "ats", label: "ATS board", icon: TrendingUp },
-              { tab: "crm", label: "CRM Leads", icon: Mail },
-              { tab: "cms", label: "Blog & Gallery", icon: BookOpen },
-              { tab: "communications", label: "Template Alerts", icon: MessageSquare },
-              { tab: "system", label: "Settings Panel", icon: Settings },
+              { tab: "overview", label: t("tabOverview"), icon: Grid },
+              { tab: "employers", label: t("tabEmployers"), icon: Landmark },
+              { tab: "candidates", label: t("tabCandidates"), icon: Users },
+              { tab: "jobs", label: t("tabJobs"), icon: Briefcase },
+              { tab: "applications", label: t("tabApplications"), icon: FileText },
+              { tab: "ats", label: t("tabAts"), icon: TrendingUp },
+              { tab: "crm", label: t("crmHeading"), icon: Mail },
+              { tab: "cms", label: t("tabCms"), icon: BookOpen },
+              { tab: "communications", label: t("tabCommunications"), icon: MessageSquare },
+              { tab: "system", label: t("tabSettings"), icon: Settings },
             ].map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.tab;
@@ -252,10 +327,10 @@ export default function SuperAdminPanel() {
                     setCmsMsg(null);
                     setSeoMsg(null);
                   }}
-                  className={`w-full flex items-center space-x-2.5 px-4 py-3 rounded-xl text-left text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  className={`w-auto lg:w-full flex items-center space-x-2.5 px-4 py-3 rounded-xl text-left text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     isActive
                       ? "bg-blue-600 text-white shadow border-l-4 border-white font-bold"
-                      : "text-gray-550 hover:bg-luxury-light hover:text-[#051B3D]"
+                      : "text-gray-500 dark:text-gray-400 hover:bg-luxury-light dark:hover:bg-navy-900 hover:text-[#051B3D] dark:hover:text-white"
                   }`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
@@ -281,148 +356,102 @@ export default function SuperAdminPanel() {
               {/* Tab 1: Overview */}
               {activeTab === "overview" && (
                 <div className="space-y-6">
-                  <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                      <h3 className="font-serif text-sm font-bold text-navy-900 uppercase tracking-wider">Business Overview</h3>
-                      <p className="text-[11px] text-gray-505 font-light font-sans font-medium">RAMA INTERNATIONAL gross statistics panel.</p>
+                      <h3 className="font-headline text-sm font-bold text-navy-900 dark:text-white uppercase tracking-wider">{t("bizOverview")}</h3>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 font-light font-sans font-medium">{t("bizOverviewDesc")}</p>
                     </div>
                     <button
                       onClick={() => setRefreshTrigger((prev) => prev + 1)}
-                      className="border border-blue-600/30 hover:bg-blue-600 hover:text-white text-blue-600 text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl flex items-center space-x-1.5 transition-colors cursor-pointer"
+                      className="border border-blue-600/30 dark:border-blue-500/20 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl flex items-center space-x-1.5 transition-colors cursor-pointer"
                     >
                       <RefreshCw className="h-3.5 w-3.5" />
-                      <span>Refresh Metrics</span>
+                      <span>{t("refreshMetrics")}</span>
                     </button>
                   </div>
 
                   {/* Operational stats */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-xs font-semibold">
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-md space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block font-sans">Job Campaigns</span>
-                      <span className="text-2xl font-serif font-extrabold text-navy-900">{jobs.length}</span>
+                    <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-5 shadow-md space-y-1">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-400 font-bold uppercase tracking-wider block font-sans">{t("activeDrives")}</span>
+                      <span className="text-2xl font-serif font-extrabold text-navy-900 dark:text-white">{jobs.length}</span>
                     </div>
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-md space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block font-sans">Active Visas</span>
-                      <span className="text-2xl font-serif font-extrabold text-navy-900">{applications.filter((a) => a.status === "VISA_STAGE").length}</span>
+                    <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-5 shadow-md space-y-1">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-400 font-bold uppercase tracking-wider block font-sans">{t("pendingVisa")}</span>
+                      <span className="text-2xl font-serif font-extrabold text-navy-900 dark:text-white">{applications.filter((a) => a.status === "VISA_STAGE").length}</span>
                     </div>
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-md space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block font-sans">Total Mobilized</span>
-                      <span className="text-2xl font-serif font-extrabold text-[#051B3D]">{systemStats.totalPlaced}</span>
+                    <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-5 shadow-md space-y-1">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-400 font-bold uppercase tracking-wider block font-sans">{t("totalPlaced")}</span>
+                      <span className="text-2xl font-serif font-extrabold text-[#051B3D] dark:text-white">{systemStats.totalPlaced}</span>
                     </div>
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-md space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block font-sans">Gross Revenue</span>
-                      <span className="text-2xl font-serif font-extrabold text-blue-600">{systemStats.annualRevenue}</span>
+                    <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-5 shadow-md space-y-1">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-400 font-bold uppercase tracking-wider block font-sans">{t("grossRevenue")}</span>
+                      <span className="text-2xl font-serif font-extrabold text-blue-600 dark:text-blue-400">{systemStats.annualRevenue}</span>
                     </div>
                   </div>
 
                   {/* Summary ratio panels */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs font-semibold text-gray-500">
-                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-4">
-                      <h4 className="font-bold text-navy-900 font-sans">Deployments by Target Destination</h4>
-                      <div className="space-y-3 font-bold text-[11px] text-navy-900">
-                        <div className="flex justify-between"><span>Saudi Arabia (KSA)</span><span className="text-blue-600">65% (806)</span></div>
-                        <div className="flex justify-between"><span>United Arab Emirates (UAE)</span><span className="text-blue-600">20% (248)</span></div>
-                        <div className="flex justify-between"><span>State of Qatar</span><span className="text-blue-600">10% (124)</span></div>
-                        <div className="flex justify-between"><span>Schengen Zone (Europe)</span><span className="text-blue-600">5% (62)</span></div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-4">
+                      <h4 className="font-bold text-navy-900 dark:text-white font-sans">{t("deploymentsTarget")}</h4>
+                      <div className="space-y-3 font-bold text-[11px] text-navy-900 dark:text-white">
+                        <div className="flex justify-between"><span>{tCountries("countryKSA")}</span><span className="text-blue-600 dark:text-blue-400">65% (806)</span></div>
+                        <div className="flex justify-between"><span>{tCountries("countryUAE")}</span><span className="text-blue-600 dark:text-blue-400">20% (248)</span></div>
+                        <div className="flex justify-between"><span>{tCountries("countryQatar")}</span><span className="text-blue-600 dark:text-blue-400">10% (124)</span></div>
+                        <div className="flex justify-between"><span>{tCountries("countryEurope")}</span><span className="text-blue-600 dark:text-blue-400">5% (62)</span></div>
                       </div>
                     </div>
 
-                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-4">
-                      <h4 className="font-bold text-navy-900 font-sans">Active Pipeline Ratios</h4>
-                      <div className="space-y-3 font-bold text-[11px] text-navy-900">
-                        <div className="flex justify-between"><span>Biometrics Complete</span><span className="text-blue-600">45 Cases</span></div>
-                        <div className="flex justify-between"><span>Embassy Queue Stamping</span><span className="text-blue-600">30 Cases</span></div>
-                        <div className="flex justify-between"><span>Flight departures queue</span><span className="text-blue-600">15 Cases</span></div>
-                        <div className="flex justify-between"><span>Medical approvals pending</span><span className="text-blue-600">25 Cases</span></div>
+                    <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-4">
+                      <h4 className="font-bold text-navy-900 dark:text-white font-sans">{t("activePipelineRatios")}</h4>
+                      <div className="space-y-3 font-bold text-[11px] text-navy-900 dark:text-white">
+                        <div className="flex justify-between"><span>{t("biometricsComplete")}</span><span className="text-blue-600 dark:text-blue-400">45 {t("cases")}</span></div>
+                        <div className="flex justify-between"><span>{t("embassyQueue")}</span><span className="text-blue-600 dark:text-blue-400">30 {t("cases")}</span></div>
+                        <div className="flex justify-between"><span>{t("flightQueue")}</span><span className="text-blue-600 dark:text-blue-400">15 {t("cases")}</span></div>
+                        <div className="flex justify-between"><span>{t("medicalPending")}</span><span className="text-blue-600 dark:text-blue-400">25 {t("cases")}</span></div>
                       </div>
                     </div>
                   </div>
                 </div>
-              )}
-
-              {/* Tab 2: Employers */}
+              )}              {/* Tab 2: Employers */}
               {activeTab === "employers" && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-6">
-                  <h3 className="font-serif text-sm font-bold text-navy-900 pb-3 border-b border-gray-150 uppercase tracking-wider">Registered Corporate Clients</h3>
+                <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-6">
+                  <h3 className="font-headline text-sm font-bold text-navy-900 dark:text-white pb-3 border-b border-gray-150 dark:border-white/5 uppercase tracking-wider">{t("registeredClients")}</h3>
                   
                   <div className="overflow-x-auto text-xs font-semibold">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse text-navy-900 dark:text-white">
                       <thead>
-                        <tr className="border-b border-gray-150 text-gray-400">
-                          <th className="pb-3.5">Company Name</th>
-                          <th className="pb-3.5">Industry</th>
-                          <th className="pb-3.5">Contact Person</th>
-                          <th className="pb-3.5">Address</th>
-                          <th className="pb-3.5">Verification</th>
-                          <th className="pb-3.5 text-right">Actions</th>
+                        <tr className="border-b border-gray-150 dark:border-white/5 text-gray-400">
+                          <th className="pb-3.5">{t("companyName")}</th>
+                          <th className="pb-3.5">{t("contactEmail")}</th>
+                          <th className="pb-3.5">{t("industry")}</th>
+                          <th className="pb-3.5">{t("regDate")}</th>
+                          <th className="pb-3.5">{t("status")}</th>
+                          <th className="pb-3.5 text-right">{t("verifyAction")}</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100 font-medium">
+                      <tbody className="divide-y divide-gray-100 dark:divide-white/5 font-medium">
                         {employers.map((emp) => (
-                          <tr key={emp.id} className="text-navy-900">
+                          <tr key={emp.id} className="text-navy-900 dark:text-white">
                             <td className="py-4 font-bold">{emp.companyName}</td>
-                            <td className="py-4 text-gray-500">{emp.industry}</td>
-                            <td className="py-4 text-gray-500">{emp.contactPerson}</td>
-                            <td className="py-4 text-gray-450">{emp.address}</td>
+                            <td className="py-4 text-gray-500 dark:text-gray-400">{emp.email}</td>
+                            <td className="py-4 text-gray-555 dark:text-gray-400">{emp.industry || "General"}</td>
+                            <td className="py-4 text-gray-450 dark:text-gray-500">{new Date(emp.createdAt).toLocaleDateString()}</td>
                             <td className="py-4">
-                              <span className={`px-2 py-0.5 rounded-lg text-[9px] uppercase font-bold border ${emp.isVerified ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200 animate-pulse"}`}>
-                                {emp.isVerified ? "Verified" : "Pending"}
+                              <span className={`inline-block text-[9px] uppercase tracking-wider font-bold border px-2 py-0.5 rounded ${
+                                emp.isVerified ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-400 dark:border-green-800" : "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800"
+                              }`}>
+                                {emp.isVerified ? t("verified") : t("pending")}
                               </span>
                             </td>
                             <td className="py-4 text-right">
-                              <button
-                                onClick={() => handleVerifyEmployer(emp.id)}
-                                className={`text-[10px] font-bold uppercase tracking-wider px-3.5 py-2 rounded-xl transition-colors cursor-pointer border ${emp.isVerified ? "border-red-200 text-red-650 bg-red-50/15 hover:bg-red-50" : "border-blue-600/30 text-blue-650 bg-blue-500/5 hover:bg-blue-500/10"}`}
-                              >
-                                {emp.isVerified ? "De-Authorize" : "Approve Client"}
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Tab 3: Candidates list */}
-              {activeTab === "candidates" && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-6">
-                  <h3 className="font-serif text-sm font-bold text-navy-900 pb-3 border-b border-gray-150 uppercase tracking-wider">Registered Candidate Dossiers</h3>
-
-                  <div className="overflow-x-auto text-xs font-semibold">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-gray-150 text-gray-400">
-                          <th className="pb-3.5">FullName</th>
-                          <th className="pb-3.5">Passport</th>
-                          <th className="pb-3.5">Skills</th>
-                          <th className="pb-3.5">Experience</th>
-                          <th className="pb-3.5">Location</th>
-                          <th className="pb-3.5 text-right">Resume File</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100 font-medium">
-                        {candidates.map((cand) => (
-                          <tr key={cand.id} className="text-navy-900">
-                            <td className="py-4 font-bold">{cand.fullName}</td>
-                            <td className="py-4 text-gray-500 uppercase">{cand.passportNumber || "Not Provided"}</td>
-                            <td className="py-4 text-gray-550 truncate max-w-[150px]">{cand.skills || "Not Provided"}</td>
-                            <td className="py-4 text-gray-500">{cand.experienceYears || 0} Years</td>
-                            <td className="py-4 text-gray-450">{cand.location || "Not Provided"}</td>
-                            <td className="py-4 text-right">
-                              {cand.resumeUrl ? (
-                                <a
-                                  href={cand.resumeUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-blue-600 hover:text-blue-500 font-bold inline-flex items-center space-x-1 hover:underline"
+                              {!emp.isVerified && (
+                                <button
+                                  onClick={() => handleVerifyEmployer(emp.id)}
+                                  className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-1.5 rounded-lg text-[10px] uppercase cursor-pointer transition-colors border-none"
                                 >
-                                  <FileDown className="h-4 w-4 shrink-0" />
-                                  <span>Download</span>
-                                </a>
-                              ) : (
-                                <span className="text-gray-400 font-light font-sans">None</span>
+                                  {t("verifyBtn")}
+                                </button>
                               )}
                             </td>
                           </tr>
@@ -433,45 +462,79 @@ export default function SuperAdminPanel() {
                 </div>
               )}
 
-              {/* Tab 4: Jobs management */}
-              {activeTab === "jobs" && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-6">
-                  <h3 className="font-serif text-sm font-bold text-navy-900 pb-3 border-b border-gray-150 uppercase tracking-wider">Hiring Campaigns</h3>
-
+              {/* Tab 3: Candidates */}
+              {activeTab === "candidates" && (
+                <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-6">
+                  <h3 className="font-headline text-sm font-bold text-navy-900 dark:text-white pb-3 border-b border-gray-150 dark:border-white/5 uppercase tracking-wider">{t("tabCandidates")}</h3>
+                  
                   <div className="overflow-x-auto text-xs font-semibold">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse text-navy-900 dark:text-white">
                       <thead>
-                        <tr className="border-b border-gray-150 text-gray-400">
-                          <th className="pb-3.5">Position Title</th>
-                          <th className="pb-3.5">Corporate Employer</th>
-                          <th className="pb-3.5">Sector</th>
-                          <th className="pb-3.5">Country</th>
-                          <th className="pb-3.5">Vacancies</th>
-                          <th className="pb-3.5">Status</th>
-                          <th className="pb-3.5 text-right">Campaign Controls</th>
+                        <tr className="border-b border-gray-150 dark:border-white/5 text-gray-400">
+                          <th className="pb-3.5">{t("candidateName")}</th>
+                          <th className="pb-3.5">{t("contactEmail")}</th>
+                          <th className="pb-3.5">{t("passportNumber")}</th>
+                          <th className="pb-3.5">{t("location")}</th>
+                          <th className="pb-3.5">{t("status")}</th>
+                          <th className="pb-3.5 text-right">{t("verifyAction")}</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100 font-medium">
-                        {jobs.map((job) => (
-                          <tr key={job.id} className="text-navy-900">
-                            <td className="py-4 font-bold">{job.title}</td>
-                            <td className="py-4 text-gray-500">{job.employer.companyName}</td>
-                            <td className="py-4 text-gray-500">{job.sector}</td>
-                            <td className="py-4 text-gray-550">{job.country}</td>
-                            <td className="py-4 text-gray-450">{job.vacancies} slots</td>
+                      <tbody className="divide-y divide-gray-100 dark:divide-white/5 font-medium">
+                        {candidates.map((cand) => (
+                          <tr key={cand.id} className="text-navy-900 dark:text-white">
+                            <td className="py-4 font-bold">{cand.fullName}</td>
+                            <td className="py-4 text-gray-500 dark:text-gray-400">{cand.email}</td>
+                            <td className="py-4 text-gray-450 dark:text-gray-400 uppercase">{cand.passportNumber || t("notLogged")}</td>
+                            <td className="py-4 text-gray-500 dark:text-gray-400">{cand.location || t("pending")}</td>
                             <td className="py-4">
-                              <span className={`px-2 py-0.5 rounded-lg text-[9px] uppercase font-bold border ${job.status === "OPEN" ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-750 border-red-200"}`}>
-                                {job.status}
+                              <span className={`inline-block text-[9px] uppercase tracking-wider font-bold border px-2 py-0.5 rounded ${
+                                cand.isVerified ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-400 dark:border-green-800" : "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800"
+                              }`}>
+                                {cand.isVerified ? t("verified") : t("pending")}
                               </span>
                             </td>
                             <td className="py-4 text-right">
-                              <button
-                                onClick={() => handleToggleJobStatus(job.id)}
-                                className={`text-[10px] font-bold uppercase tracking-wider px-3.5 py-2 rounded-xl transition-colors cursor-pointer border ${job.status === "OPEN" ? "border-red-200 text-red-650 bg-red-50/15 hover:bg-red-50" : "border-green-200 text-green-650 bg-green-50/10 hover:bg-green-50"}`}
-                              >
-                                {job.status === "OPEN" ? "Close Post" : "Open Post"}
-                              </button>
+                              {!cand.isVerified && (
+                                <button
+                                  onClick={() => handleVerifyCandidate(cand.id)}
+                                  className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-1.5 rounded-lg text-[10px] uppercase cursor-pointer transition-colors border-none"
+                                >
+                                  {t("verifyBtn")}
+                                </button>
+                              )}
                             </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 4: Active jobs drives */}
+              {activeTab === "jobs" && (
+                <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-6">
+                  <h3 className="font-headline text-sm font-bold text-navy-900 dark:text-white pb-3 border-b border-gray-150 dark:border-white/5 uppercase tracking-wider">{t("activeJobsRegistry")}</h3>
+                  
+                  <div className="overflow-x-auto text-xs font-semibold">
+                    <table className="w-full text-left border-collapse text-navy-900 dark:text-white">
+                      <thead>
+                        <tr className="border-b border-gray-150 dark:border-white/5 text-gray-400">
+                          <th className="pb-3.5">{t("jobTitle")}</th>
+                          <th className="pb-3.5">{t("corpClient")}</th>
+                          <th className="pb-3.5">{t("targetDest")}</th>
+                          <th className="pb-3.5">{t("manpowerSector")}</th>
+                          <th className="pb-3.5">{t("slots")}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-white/5 font-medium">
+                        {jobs.map((job) => (
+                          <tr key={job.id} className="text-navy-900 dark:text-white">
+                            <td className="py-4 font-bold">{job.title}</td>
+                            <td className="py-4 text-gray-500 dark:text-gray-400">{job.employer.companyName}</td>
+                            <td className="py-4 text-blue-600 dark:text-blue-400 font-bold">{job.country}</td>
+                            <td className="py-4 text-gray-500 dark:text-gray-450">{job.sector}</td>
+                            <td className="py-4 font-bold">{job.vacancies}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -482,34 +545,34 @@ export default function SuperAdminPanel() {
 
               {/* Tab 5: Applications tracker */}
               {activeTab === "applications" && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-6">
-                  <h3 className="font-serif text-sm font-bold text-navy-900 pb-3 border-b border-gray-150 uppercase tracking-wider">Global Applications Logs</h3>
-
+                <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-6">
+                  <h3 className="font-headline text-sm font-bold text-navy-900 dark:text-white pb-3 border-b border-gray-150 dark:border-white/5 uppercase tracking-wider">{t("applicationsTracker")}</h3>
+                  
                   <div className="overflow-x-auto text-xs font-semibold">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse text-navy-900 dark:text-white">
                       <thead>
-                        <tr className="border-b border-gray-150 text-gray-400">
-                          <th className="pb-3.5">Candidate</th>
-                          <th className="pb-3.5">Position</th>
-                          <th className="pb-3.5">Employer</th>
-                          <th className="pb-3.5">Country</th>
-                          <th className="pb-3.5">Pipeline Stage</th>
-                          <th className="pb-3.5">Date Applied</th>
+                        <tr className="border-b border-gray-150 dark:border-white/5 text-gray-400">
+                          <th className="pb-3.5">{t("candidate")}</th>
+                          <th className="pb-3.5">{t("targetVacancy")}</th>
+                          <th className="pb-3.5">{t("employerClient")}</th>
+                          <th className="pb-3.5">{t("targetDest")}</th>
+                          <th className="pb-3.5">{t("sourcingStage")}</th>
+                          <th className="pb-3.5">{t("loggedDate")}</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100 font-medium">
+                      <tbody className="divide-y divide-gray-100 dark:divide-white/5 font-medium">
                         {applications.map((app) => (
-                          <tr key={app.id} className="text-navy-900">
+                          <tr key={app.id} className="text-navy-900 dark:text-white">
                             <td className="py-4 font-bold">{app.candidate.fullName}</td>
-                            <td className="py-4 text-gray-500">{app.job.title}</td>
-                            <td className="py-4 text-gray-500">{app.job.employer.companyName}</td>
-                            <td className="py-4 text-gray-450">{app.job.country}</td>
+                            <td className="py-4 text-gray-500 dark:text-gray-400">{app.job.title}</td>
+                            <td className="py-4 text-gray-500 dark:text-gray-400">{app.job.employer.companyName}</td>
+                            <td className="py-4 text-gray-450 dark:text-gray-400">{app.job.country}</td>
                             <td className="py-4">
                               <span className={`inline-block text-[9px] uppercase tracking-wider font-bold border px-2.5 py-0.5 rounded-full ${getStatusBadge(app.status)}`}>
                                 {app.status}
                               </span>
                             </td>
-                            <td className="py-4 text-gray-400">{new Date(app.createdAt).toLocaleDateString()}</td>
+                            <td className="py-4 text-gray-400 dark:text-gray-500">{new Date(app.createdAt).toLocaleDateString()}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -521,9 +584,9 @@ export default function SuperAdminPanel() {
               {/* Tab 6: ATS board */}
               {activeTab === "ats" && (
                 <div className="space-y-4">
-                  <div className="pb-2 border-b border-gray-200">
-                    <h3 className="font-serif text-sm font-bold text-navy-900 uppercase tracking-wider">Global ATS Command Board</h3>
-                    <p className="text-xs text-gray-555 mt-0.5 font-sans">Full administrative drag/drop controls across all company recruitment campaigns.</p>
+                  <div className="pb-2 border-b border-gray-200 dark:border-white/5">
+                    <h3 className="font-headline text-sm font-bold text-navy-900 dark:text-white uppercase tracking-wider">{t("atsBoardTitle")}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-sans">{t("atsBoardDesc")}</p>
                   </div>
                   <PipelineBoard applications={applications} onRefresh={fetchAdminData} />
                 </div>
@@ -531,16 +594,16 @@ export default function SuperAdminPanel() {
 
               {/* Tab 7: CRM Leads */}
               {activeTab === "crm" && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-6">
-                  <div className="flex justify-between items-center pb-3 border-b border-gray-150">
-                    <h3 className="font-serif text-sm font-bold text-[#051B3D] uppercase tracking-wider">CRM Inquiries Inbox</h3>
+                <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-6">
+                  <div className="flex justify-between items-center pb-3 border-b border-gray-150 dark:border-white/5">
+                    <h3 className="font-headline text-sm font-bold text-[#051B3D] dark:text-white uppercase tracking-wider">{t("crmInboxTitle")}</h3>
                     
                     <select
                       value={crmFilter}
                       onChange={(e) => setCrmFilter(e.target.value)}
-                      className="bg-luxury-light border border-gray-200 text-navy-900 rounded-xl p-1.5 text-[11px] font-semibold cursor-pointer outline-none"
+                      className="bg-luxury-light dark:bg-navy-950 border border-gray-200 dark:border-white/10 text-navy-900 dark:text-white rounded-xl p-1.5 text-[11px] font-semibold cursor-pointer outline-none"
                     >
-                      <option value="ALL">All Leads</option>
+                      <option value="ALL">{t("allLeads")}</option>
                       <option value="PENDING">PENDING</option>
                       <option value="CONTACTED">CONTACTED</option>
                       <option value="ARCHIVED">ARCHIVED</option>
@@ -554,18 +617,18 @@ export default function SuperAdminPanel() {
                         <div
                           key={inq.id}
                           className={`border rounded-2xl p-5 space-y-3 text-xs ${
-                            inq.status === "PENDING" ? "bg-amber-50/20 border-amber-205" : "bg-gray-50 border-gray-200"
+                            inq.status === "PENDING" ? "bg-amber-50/20 border-amber-200 dark:border-amber-800" : "bg-gray-50 dark:bg-navy-950/40 border-gray-200 dark:border-white/5"
                           }`}
                         >
                           <div className="flex justify-between items-start">
                             <div>
-                              <h4 className="font-bold text-navy-900 text-sm">{inq.name}</h4>
-                              <p className="text-gray-400 font-semibold mt-0.5">{inq.companyName || "No Company"}</p>
+                              <h4 className="font-bold text-navy-900 dark:text-white text-sm font-headline">{inq.name}</h4>
+                              <p className="text-gray-400 font-semibold mt-0.5">{inq.companyName || t("noCompany")}</p>
                             </div>
                             <select
                               value={inq.status}
                               onChange={(e) => handleInquiryStatus(inq.id, e.target.value)}
-                              className="bg-white border border-gray-205 text-navy-900 rounded-lg p-1 text-[10px] font-bold outline-none cursor-pointer"
+                              className="bg-white dark:bg-navy-900 border border-gray-205 dark:border-white/10 text-navy-900 dark:text-white rounded-lg p-1 text-[10px] font-bold outline-none cursor-pointer"
                             >
                               <option value="PENDING">PENDING</option>
                               <option value="CONTACTED">CONTACTED</option>
@@ -573,14 +636,14 @@ export default function SuperAdminPanel() {
                             </select>
                           </div>
 
-                          <p className="text-gray-600 leading-relaxed font-light bg-white p-3.5 rounded-xl border border-gray-150 font-sans">
+                          <p className="text-gray-655 dark:text-gray-300 leading-relaxed font-light bg-white dark:bg-navy-900 p-3.5 rounded-xl border border-gray-150 dark:border-white/5 font-sans">
                             "{inq.message}"
                           </p>
 
                           <div className="flex flex-wrap gap-4 text-gray-400 font-semibold text-[9px] uppercase tracking-wider font-sans">
-                            <span>Email: {inq.email}</span>
-                            {inq.phone && <span>Tel: {inq.phone}</span>}
-                            <span>Logged: {new Date(inq.createdAt).toLocaleString()}</span>
+                            <span>{t("emailLabel")}: {inq.email}</span>
+                            {inq.phone && <span>{t("telLabel")}: {inq.phone}</span>}
+                            <span>{t("loggedLabel")}: {new Date(inq.createdAt).toLocaleString()}</span>
                           </div>
                         </div>
                       ))}
@@ -591,34 +654,34 @@ export default function SuperAdminPanel() {
               {/* Tab 8: Blog CMS */}
               {activeTab === "cms" && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <div className="lg:col-span-2 bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-4">
-                    <h3 className="font-serif font-bold text-xs text-navy-900 pb-2 border-b border-gray-150 uppercase tracking-wider">Publish News / Article</h3>
+                  <div className="lg:col-span-2 bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-4">
+                    <h3 className="font-headline font-bold text-xs text-navy-900 dark:text-white pb-2 border-b border-gray-150 dark:border-white/5 uppercase tracking-wider">{t("cmsHeading")}</h3>
 
                     {cmsMsg && (
-                      <div className="p-3 bg-green-50 border border-green-200 text-green-700 rounded-xl text-xs font-semibold">
+                      <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-450 rounded-xl text-xs font-semibold">
                         {cmsMsg}
                       </div>
                     )}
 
-                    <form onSubmit={handleAddBlog} className="space-y-3.5 text-xs text-gray-550 font-semibold font-sans">
+                    <form onSubmit={handleAddBlog} className="space-y-3.5 text-xs text-gray-550 dark:text-gray-300 font-semibold font-sans">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block mb-0.5 text-navy-900">Article Title *</label>
+                          <label className="block mb-0.5 text-navy-900 dark:text-gray-300">{t("articleTitle")} *</label>
                           <input
                             type="text"
                             required
                             value={blogTitle}
                             onChange={(e) => setBlogTitle(e.target.value)}
                             placeholder="e.g. GCC visa stamping updates"
-                            className="w-full bg-luxury-light border border-gray-200 text-[#051B3D] rounded-xl p-2.5 outline-none font-medium"
+                            className="w-full bg-luxury-light dark:bg-navy-950 border border-gray-200 dark:border-white/10 text-navy-900 dark:text-white rounded-xl p-2.5 outline-none font-medium"
                           />
                         </div>
                         <div>
-                          <label className="block mb-0.5 text-navy-900">Category *</label>
+                          <label className="block mb-0.5 text-navy-900 dark:text-gray-300">{t("category")} *</label>
                           <select
                             value={blogCat}
                             onChange={(e) => setBlogCat(e.target.value)}
-                            className="w-full bg-luxury-light border border-gray-200 text-[#051B3D] rounded-xl p-2.5 outline-none font-medium cursor-pointer"
+                            className="w-full bg-luxury-light dark:bg-navy-950 border border-gray-200 dark:border-white/10 text-[#051B3D] dark:text-white rounded-xl p-2.5 outline-none font-medium cursor-pointer"
                           >
                             <option value="Visa Update">Visa Update</option>
                             <option value="Industry Insights">Industry Insights</option>
@@ -628,51 +691,51 @@ export default function SuperAdminPanel() {
                       </div>
 
                       <div>
-                        <label className="block mb-0.5 text-navy-900">Brief Summary *</label>
+                        <label className="block mb-0.5 text-navy-900 dark:text-gray-300">{t("briefSummary")} *</label>
                         <input
                           type="text"
                           required
                           value={blogSummary}
                           onChange={(e) => setBlogSummary(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-200 text-[#051B3D] rounded-xl p-2.5 outline-none font-medium"
+                          className="w-full bg-luxury-light dark:bg-navy-950 border border-gray-200 dark:border-white/10 text-navy-900 dark:text-white rounded-xl p-2.5 outline-none font-medium"
                         />
                       </div>
 
                       <div>
-                        <label className="block mb-0.5 text-navy-900">Body Content *</label>
+                        <label className="block mb-0.5 text-navy-900 dark:text-gray-300">{t("bodyContent")} *</label>
                         <textarea
                           rows={6}
                           required
                           value={blogContent}
                           onChange={(e) => setBlogContent(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-200 text-[#051B3D] rounded-xl p-2.5 outline-none font-medium resize-none"
+                          className="w-full bg-luxury-light dark:bg-navy-950 border border-gray-200 dark:border-white/10 text-navy-900 dark:text-white rounded-xl p-2.5 outline-none font-medium resize-none"
                         />
                       </div>
 
                       <button
                         type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-3.5 rounded-xl border border-blue-500/25 cursor-pointer text-[10px]"
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-3.5 rounded-xl border border-blue-500/25 cursor-pointer text-[10px] font-headline"
                       >
-                        Publish Article
+                        {t("btnPublish")}
                       </button>
                     </form>
                   </div>
 
                   {/* Gallery */}
-                  <div className="lg:col-span-1 bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-4">
-                    <h3 className="font-serif font-bold text-xs text-navy-900 pb-2 border-b border-gray-150 uppercase tracking-wider flex items-center space-x-1.5">
+                  <div className="lg:col-span-1 bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-4">
+                    <h3 className="font-headline font-bold text-xs text-navy-900 dark:text-white pb-2 border-b border-gray-150 dark:border-white/5 uppercase tracking-wider flex items-center space-x-1.5">
                       <ImageIcon className="h-4.5 w-4.5 text-blue-500" />
-                      <span>Departure Gallery</span>
+                      <span>{t("cmsGallery")}</span>
                     </h3>
-                    <p className="text-[10px] text-gray-400 font-light leading-relaxed">Upload candidate deployment photos to the public gallery.</p>
+                    <p className="text-[10px] text-gray-450 dark:text-gray-400 font-light leading-relaxed">{t("cmsGalleryDesc")}</p>
 
-                    <div className="border-2 border-dashed border-gray-200 rounded-3xl p-10 text-center hover:border-blue-600 transition-colors">
+                    <div className="border-2 border-dashed border-gray-200 dark:border-white/5 rounded-3xl p-10 text-center hover:border-blue-600 transition-colors">
                       <ImageIcon className="h-8 w-8 text-blue-500 mx-auto mb-2" />
                       <button
-                        onClick={() => alert("Photo upload logged in public gallery database.")}
-                        className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider px-4 py-3 rounded-xl border border-blue-500/25 cursor-pointer"
+                        onClick={() => alert(t("alertPhotoUpload"))}
+                        className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider px-4 py-3 rounded-xl border border-blue-500/25 cursor-pointer font-headline"
                       >
-                        Select Image
+                        {t("btnSelectImage")}
                       </button>
                     </div>
                   </div>
@@ -681,25 +744,25 @@ export default function SuperAdminPanel() {
 
               {/* Tab 9: Communications Templates */}
               {activeTab === "communications" && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-6">
+                <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-6">
                   <div>
-                    <h3 className="font-serif text-sm font-bold text-navy-900 pb-2 border-b border-gray-150 uppercase tracking-wider">Alert Templates</h3>
-                    <p className="text-[10px] text-gray-400 font-light mt-1 font-sans">Configure SMS, email and WhatsApp notifications variables.</p>
+                    <h3 className="font-headline text-sm font-bold text-navy-900 dark:text-white pb-2 border-b border-gray-150 dark:border-white/5 uppercase tracking-wider">{t("tabCommunications")}</h3>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-400 font-light mt-1 font-sans">{t("configureCommDesc")}</p>
                   </div>
 
-                  <div className="space-y-4 text-xs font-semibold text-gray-550">
+                  <div className="space-y-4 text-xs font-semibold text-gray-555 dark:text-gray-300 font-sans">
                     {[
                       { channel: "EMAIL", name: "Candidate Shortlisted Notification", preview: "Subject: Congratulations! You have been shortlisted for [JobTitle]. Please review VFS biometrics schedule..." },
                       { channel: "WHATSAPP", name: "Visa Stamped Notification", preview: "WhatsApp: Dear [Name], your visa stamp for [Country] has been verified. Pack and report to Delhi HQ..." },
                     ].map((temp, i) => (
-                      <div key={i} className="border border-gray-150 rounded-2xl p-4 bg-luxury-light space-y-2">
+                      <div key={i} className="border border-gray-150 dark:border-white/5 rounded-2xl p-4 bg-luxury-light dark:bg-navy-950/30 space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-[9px] uppercase tracking-wider font-bold text-blue-600 bg-blue-600/10 px-2.5 py-0.5 rounded-lg border border-blue-550/15">
+                          <span className="text-[9px] uppercase tracking-wider font-bold text-blue-600 dark:text-blue-400 bg-blue-600/10 px-2.5 py-0.5 rounded-lg border border-blue-550/15">
                             {temp.channel}
                           </span>
-                          <h4 className="font-bold text-navy-900 text-xs">{temp.name}</h4>
+                          <h4 className="font-bold text-navy-900 dark:text-white text-xs font-headline">{temp.name}</h4>
                         </div>
-                        <p className="text-[11px] text-gray-400 font-light italic bg-white p-3.5 rounded-xl border border-gray-100 font-sans">
+                        <p className="text-[11px] text-gray-450 dark:text-gray-400 font-light italic bg-white dark:bg-navy-900 p-3.5 rounded-xl border border-gray-100 dark:border-white/5 font-sans">
                           "{temp.preview}"
                         </p>
                       </div>
@@ -712,18 +775,18 @@ export default function SuperAdminPanel() {
               {activeTab === "system" && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Permissions */}
-                  <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-4">
-                    <h3 className="font-serif font-bold text-xs text-[#051B3D] pb-2 border-b border-gray-150 uppercase tracking-wider">Role Permissions</h3>
-                    <div className="space-y-3 text-xs font-semibold text-navy-900">
+                  <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-4">
+                    <h3 className="font-headline font-bold text-xs text-[#051B3D] dark:text-white pb-2 border-b border-gray-150 dark:border-white/5 uppercase tracking-wider">{t("rolePermissions")}</h3>
+                    <div className="space-y-3 text-xs font-semibold text-navy-900 dark:text-white">
                       {[
                         { role: "ADMIN", desc: "Full permissions: CRM, ATS, CMS and systems configs." },
                         { role: "EMPLOYER", desc: "Campaign posting, ATS drag/drop boards, schedule interviews." },
                         { role: "CANDIDATE", desc: "Profile dossier editing, easy applies, visa steppers." },
                       ].map((perm, i) => (
-                        <div key={i} className="border border-gray-200 p-3.5 rounded-xl bg-luxury-light flex justify-between items-center">
+                        <div key={i} className="border border-gray-200 dark:border-white/5 p-3.5 rounded-xl bg-luxury-light dark:bg-navy-950/30 flex justify-between items-center text-navy-900 dark:text-white">
                           <div>
-                            <h4 className="font-bold">{perm.role}</h4>
-                            <p className="text-[10px] text-gray-450 font-light mt-0.5 font-sans leading-normal">{perm.desc}</p>
+                            <h4 className="font-bold font-headline">{perm.role}</h4>
+                            <p className="text-[10px] text-gray-400 dark:text-gray-400 font-light mt-0.5 font-sans leading-normal">{perm.desc}</p>
                           </div>
                           <Lock className="h-4 w-4 text-blue-500 shrink-0" />
                         </div>
@@ -732,50 +795,50 @@ export default function SuperAdminPanel() {
                   </div>
 
                   {/* SEO & Backups */}
-                  <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-6 font-sans">
+                  <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-6 font-sans">
                     <div className="space-y-4">
-                      <h3 className="font-serif font-bold text-xs text-navy-900 pb-2 border-b border-gray-150 uppercase tracking-wider">SEO settings</h3>
+                      <h3 className="font-headline font-bold text-xs text-navy-900 dark:text-white pb-2 border-b border-gray-150 dark:border-white/5 uppercase tracking-wider">{t("seoHeading")}</h3>
                       {seoMsg && (
-                        <div className="p-3 bg-green-50 border border-green-200 text-green-755 rounded-xl text-[11px] font-semibold">
+                        <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-xl text-[11px] font-semibold">
                           {seoMsg}
                         </div>
                       )}
-                      <form onSubmit={handleSaveSEO} className="space-y-3.5 text-xs text-gray-500 font-semibold">
+                      <form onSubmit={handleSaveSEO} className="space-y-3.5 text-xs text-gray-500 dark:text-gray-300 font-semibold">
                         <div>
-                          <label className="block mb-0.5 text-[#051B3D]">Page Meta Title *</label>
+                          <label className="block mb-0.5 text-[#051B3D] dark:text-gray-350">{t("metaTitle")} *</label>
                           <input
                             type="text"
                             required
                             value={seoTitle}
                             onChange={(e) => setSeoTitle(e.target.value)}
-                            className="w-full bg-luxury-light border border-gray-205 text-navy-900 rounded-xl p-3 outline-none font-medium focus:border-blue-500"
+                            className="w-full bg-luxury-light dark:bg-navy-950 border border-gray-205 dark:border-white/10 text-navy-900 dark:text-white rounded-xl p-3 outline-none font-medium focus:border-blue-500"
                           />
                         </div>
                         <div>
-                          <label className="block mb-0.5 text-[#051B3D]">SEO Keywords *</label>
+                          <label className="block mb-0.5 text-[#051B3D] dark:text-gray-350">{t("metaKeywords")} *</label>
                           <input
                             type="text"
                             required
                             value={seoKeywords}
                             onChange={(e) => setSeoKeywords(e.target.value)}
-                            className="w-full bg-luxury-light border border-gray-205 text-navy-900 rounded-xl p-3 outline-none font-medium focus:border-blue-500"
+                            className="w-full bg-luxury-light dark:bg-navy-950 border border-gray-205 text-navy-900 dark:text-white rounded-xl p-3 outline-none font-medium focus:border-blue-500"
                           />
                         </div>
-                        <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-3 rounded-xl border border-blue-500/20 cursor-pointer text-[9px]">
-                          Save SEO Settings
+                        <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-3 rounded-xl border border-blue-500/20 cursor-pointer text-[9px] font-headline">
+                          {t("saveMeta")}
                         </button>
                       </form>
                     </div>
 
-                    <div className="space-y-3 pt-4 border-t border-gray-100">
-                      <h4 className="font-serif text-xs font-bold text-navy-900 uppercase tracking-wider">System Database Backups</h4>
-                      <p className="text-[10px] text-gray-400 font-light leading-relaxed">Trigger database copies for archival safety.</p>
+                    <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-white/5">
+                      <h4 className="font-headline text-xs font-bold text-navy-900 dark:text-white uppercase tracking-wider">{t("sysBackupTitle")}</h4>
+                      <p className="text-[10px] text-gray-400 dark:text-gray-400 font-light leading-relaxed">{t("sysBackupDesc")}</p>
                       <button
-                        onClick={() => alert("Initiating SQLite database full secure backup to workspace root.")}
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-3.5 rounded-xl text-[10px] shadow flex items-center justify-center space-x-1.5 cursor-pointer border border-blue-500/25 font-sans"
+                        onClick={handleBackupDatabase}
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-3.5 rounded-xl text-[10px] shadow flex items-center justify-center space-x-1.5 cursor-pointer border border-blue-500/25 font-sans font-headline"
                       >
                         <Database className="h-4 w-4" />
-                        <span>Backup Database Now</span>
+                        <span>{t("sysBackupBtn")}</span>
                       </button>
                     </div>
                   </div>

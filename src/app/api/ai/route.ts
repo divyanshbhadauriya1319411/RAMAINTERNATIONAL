@@ -71,12 +71,12 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: "Missing message." }, { status: 400 });
         }
         // Simulated AI Bot logic
-        let reply = "I am RAMA's Global Recruitment AI. How can I assist you with your visa tracking, trade test yards, or active job applications?";
+        let reply = "I am RAMA INTERNATIONAL-INDIA's Global Recruitment AI. How can I assist you with your visa tracking, trade test yards, or active job applications?";
         const msgLower = message.toLowerCase();
         if (msgLower.includes("visa") || msgLower.includes("status")) {
           reply = "You can track your visa stages (VFS appointment, medical report, consulate stamp) live on the Candidate Dashboard stepper.";
         } else if (msgLower.includes("licence") || msgLower.includes("license")) {
-          reply = "RAMA INTERNATIONAL is certified by the Ministry of External Affairs (MEA), Government of India. MEA License: RC-B-0850/DEL/COM/1000+/5/9385/2018.";
+          reply = "RAMA INTERNATIONAL-INDIA is certified by the Ministry of External Affairs (MEA), Government of India. MEA License: RC-B-0850/DEL/COM/1000+/5/9385/2018.";
         } else if (msgLower.includes("apply") || msgLower.includes("jobs")) {
           reply = "Browse our live jobs feed on the Job Portal, configure your sector notifications, and click 'Easy Apply' to submit your dossier.";
         }

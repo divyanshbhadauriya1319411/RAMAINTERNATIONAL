@@ -5,19 +5,26 @@ import { getUserFromRequest } from "@/lib/auth";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search") || "";
-    const sector = searchParams.get("sector") || "";
-    const country = searchParams.get("country") || "";
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const search = searchParams.get("search") || searchParams.get("keyword") || "";
+    const sector = searchParams.get("sector") || searchParams.get("industry") || "";
+    const country = searchParams.get("country") || searchParams.get("location") || "";
+    const salary = searchParams.get("salary") || "";
+    const company = searchParams.get("company") || "";
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const sortBy = searchParams.get("sortBy") || "createdAt";
+    const sortOrder = searchParams.get("sortOrder") === "asc" ? "asc" : "desc";
     const meta = searchParams.get("meta") === "true";
 
     // If meta is requested, return unique sectors and countries for filter options
     if (meta) {
       const distinctSectors = await prisma.job.findMany({
+        where: { isDeleted: false, status: "OPEN" },
         select: { sector: true },
         distinct: ["sector"],
       });
       const distinctCountries = await prisma.job.findMany({
+        where: { isDeleted: false, status: "OPEN" },
         select: { country: true },
         distinct: ["country"],
       });
@@ -30,27 +37,43 @@ export async function GET(request: Request) {
     // Prepare where clause
     const where: any = {
       status: "OPEN",
+      isDeleted: false,
     };
 
     if (search) {
       where.OR = [
-        { title: { contains: search } },
-        { description: { contains: search } },
-        { requirements: { contains: search } },
+        { title: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+        { requirements: { contains: search, mode: "insensitive" } },
       ];
     }
 
     if (sector) {
-      where.sector = sector;
+      where.sector = { contains: sector, mode: "insensitive" };
     }
 
     if (country) {
-      where.country = country;
+      where.country = { contains: country, mode: "insensitive" };
     }
+
+    if (salary) {
+      where.salaryRange = { contains: salary, mode: "insensitive" };
+    }
+
+    if (company) {
+      where.employer = {
+        companyName: { contains: company, mode: "insensitive" },
+      };
+    }
+
+    const skip = (page - 1) * limit;
+
+    const totalJobs = await prisma.job.count({ where });
 
     const jobs = await prisma.job.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy: { [sortBy]: sortOrder },
+      skip,
       take: limit,
       include: {
         employer: {
@@ -62,7 +85,15 @@ export async function GET(request: Request) {
       },
     });
 
-    return NextResponse.json({ jobs });
+    return NextResponse.json({
+      jobs,
+      pagination: {
+        total: totalJobs,
+        page,
+        limit,
+        pages: Math.ceil(totalJobs / limit),
+      },
+    });
   } catch (error) {
     console.error("Error in /api/jobs GET:", error);
     return NextResponse.json(

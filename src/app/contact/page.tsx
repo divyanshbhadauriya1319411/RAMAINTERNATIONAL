@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Mail, Phone, MapPin, CheckCircle, RefreshCw, Send, MessageCircle } from "lucide-react";
@@ -14,6 +15,9 @@ export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+
+  const t = useTranslations("contactPage");
+  const tForm = useTranslations("callbackForm");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +55,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 text-navy-900 font-sans">
+    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-navy-950 text-navy-900 dark:text-white font-sans transition-colors duration-200 overflow-x-hidden">
       <Navbar />
 
       {/* Page Header */}
@@ -60,9 +64,9 @@ export default function ContactPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.1),transparent_70%)] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 text-center relative z-10 space-y-4">
-          <h1 className="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">Contact &amp; Global Offices</h1>
+          <h1 className="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">{t("title")}</h1>
           <p className="text-xs sm:text-sm text-gray-300 font-light max-w-xl mx-auto uppercase tracking-widest leading-relaxed">
-            Empower your next hiring campaign. Get in touch with our agency specialists.
+            {t("desc")}
           </p>
         </div>
       </section>
@@ -71,14 +75,14 @@ export default function ContactPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 grid grid-cols-1 lg:grid-cols-2 gap-16 w-full">
         
         {/* Contact Form card */}
-        <div className="bg-white border border-gray-150 rounded-[32px] p-6 sm:p-8 shadow-enterprise">
-          <h2 className="font-headline text-xl font-bold text-navy-900 mb-2">Submit a Manpower Request</h2>
-          <p className="text-xs text-gray-500 mb-8 leading-relaxed font-light">
-            Fill out the form below. A RAMA relationship director will review your requirements and respond within 24 hours.
+        <div className="bg-white dark:bg-navy-900/40 border border-gray-150 dark:border-white/5 rounded-[32px] p-6 sm:p-8 shadow-enterprise">
+          <h2 className="font-headline text-xl font-bold text-navy-900 dark:text-white mb-2">{t("formTitle")}</h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-8 leading-relaxed font-light font-headline">
+            {t("formDesc")}
           </p>
 
           {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-2xl text-xs flex items-start space-x-2">
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-2xl text-xs flex items-start space-x-2">
               <CheckCircle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold font-headline">Thank you for contacting us!</p>
@@ -88,69 +92,69 @@ export default function ContactPage() {
           )}
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-xs font-semibold">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-2xl text-xs font-semibold">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5 text-xs text-navy-900 font-semibold">
+          <form onSubmit={handleSubmit} className="space-y-5 text-xs text-navy-900 dark:text-white font-semibold">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-navy-900 mb-1.5 font-headline">Contact Name *</label>
+                <label className="block text-navy-900 dark:text-white mb-1.5 font-headline">{tForm("name")} *</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. John Doe"
-                  className="w-full bg-slate-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-blue-600 focus:bg-white transition-all text-navy-900 font-medium font-sans"
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-gray-200 dark:border-white/10 rounded-xl p-3 outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-navy-900 transition-all text-navy-900 dark:text-white font-medium font-sans"
                 />
               </div>
               <div>
-                <label className="block text-navy-900 mb-1.5 font-headline">Corporate Email *</label>
+                <label className="block text-navy-900 dark:text-white mb-1.5 font-headline">{tForm("email")} *</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="e.g. j.doe@company.com"
-                  className="w-full bg-slate-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-blue-600 focus:bg-white transition-all text-navy-900 font-medium font-sans"
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-gray-200 dark:border-white/10 rounded-xl p-3 outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-navy-900 transition-all text-navy-900 dark:text-white font-medium font-sans"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-navy-900 mb-1.5 font-headline">Company / Group Name</label>
+                <label className="block text-navy-900 dark:text-white mb-1.5 font-headline">{tForm("company")}</label>
                 <input
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="e.g. Saudi Builders Ltd"
-                  className="w-full bg-slate-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-blue-600 focus:bg-white transition-all text-navy-900 font-medium font-sans"
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-gray-200 dark:border-white/10 rounded-xl p-3 outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-navy-900 transition-all text-navy-900 dark:text-white font-medium font-sans"
                 />
               </div>
               <div>
-                <label className="block text-navy-900 mb-1.5 font-headline">Telephone / WhatsApp</label>
+                <label className="block text-navy-900 dark:text-white mb-1.5 font-headline">{tForm("phone")}</label>
                 <input
                   type="text"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="e.g. +971 50 1234567"
-                  className="w-full bg-slate-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-blue-600 focus:bg-white transition-all text-navy-900 font-medium font-sans"
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-gray-200 dark:border-white/10 rounded-xl p-3 outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-navy-900 transition-all text-navy-900 dark:text-white font-medium font-sans"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-navy-900 mb-1.5 font-headline">Hiring Requirements / Details *</label>
+              <label className="block text-navy-900 dark:text-white mb-1.5 font-headline">{tForm("message")} *</label>
               <textarea
                 rows={5}
                 required
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Detail your requirements (e.g. number of workers needed, trade testing criteria, salary levels, destination country)..."
-                className="w-full bg-slate-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-blue-600 focus:bg-white transition-all text-navy-900 font-medium resize-none font-sans"
+                className="w-full bg-slate-50 dark:bg-navy-950 border border-gray-200 dark:border-white/10 rounded-xl p-3 outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-navy-900 transition-all text-navy-900 dark:text-white font-medium resize-none font-sans"
               />
             </div>
 
@@ -164,7 +168,7 @@ export default function ContactPage() {
               ) : (
                 <>
                   <Send className="h-3.5 w-3.5" />
-                  <span>Submit Inquiry</span>
+                  <span>{tForm("submit")}</span>
                 </>
               )}
             </button>
@@ -174,7 +178,7 @@ export default function ContactPage() {
         {/* Global HQ Info */}
         <div className="space-y-8 flex flex-col justify-between h-full">
           <div className="bg-[#051B3D] text-white rounded-[24px] border border-white/5 p-8 shadow-2xl space-y-6">
-            <h3 className="font-headline text-lg font-bold text-gold-500 tracking-wider uppercase">RAMA CORPORATE OFFICE</h3>
+            <h3 className="font-headline text-lg font-bold text-gold-500 tracking-wider uppercase">RAMA INTERNATIONAL-INDIA CORPORATE OFFICE</h3>
             
             <div className="space-y-6 text-xs font-light">
               <div className="flex items-start space-x-4">
@@ -226,19 +230,19 @@ export default function ContactPage() {
           </div>
 
           {/* WhatsApp Support CTA Card */}
-          <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-[24px] flex items-center justify-between shadow-enterprise">
-            <div className="space-y-1">
-              <h4 className="font-bold text-emerald-900 font-headline text-sm flex items-center space-x-1.5">
-                <MessageCircle className="h-5 w-5 fill-emerald-600 text-emerald-600 shrink-0" />
+          <div className="bg-emerald-50 dark:bg-[#064E3B]/10 border border-emerald-100 dark:border-emerald-900/20 p-6 rounded-[24px] flex items-center justify-between shadow-enterprise">
+            <div className="space-y-1 col-span-1">
+              <h4 className="font-bold text-emerald-900 dark:text-white font-headline text-sm flex items-center space-x-1.5">
+                <MessageCircle className="h-5 w-5 fill-emerald-600 text-emerald-600 dark:fill-emerald-450 dark:text-emerald-450 shrink-0" />
                 <span>Instant Support?</span>
               </h4>
-              <p className="text-xs text-emerald-850 font-light">Connect with our support team on WhatsApp for quick inquiries.</p>
+              <p className="text-xs text-emerald-850 dark:text-gray-300 font-light">Connect with our support team on WhatsApp for quick inquiries.</p>
             </div>
             <a
-              href="https://wa.me/919818856000?text=Hello%20RAMA%20INTERNATIONAL,%20we%2520are%2520interested%20in%20recruiting%20manpower%20from%20India."
+              href="https://wa.me/919818856000?text=Hello%20RAMA%20INTERNATIONAL-INDIA,%20we%2520are%2520interested%20in%20recruiting%20manpower%20from%20India."
               target="_blank"
               rel="noreferrer"
-              className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-full flex items-center gap-2 hover:shadow-lg transition-all duration-300 font-headline text-[10px] uppercase font-bold tracking-wider"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-full flex items-center gap-2 hover:shadow-lg transition-all duration-300 font-headline text-[10px] uppercase font-bold tracking-wider shrink-0"
             >
               Chat Now
             </a>

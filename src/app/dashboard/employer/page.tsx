@@ -1,118 +1,127 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Landmark,
-  Briefcase,
-  Plus,
-  FileText,
-  CheckCircle,
-  RefreshCw,
-  AlertCircle,
-  Grid,
-  Users,
-  Calendar,
-  CreditCard,
-  Settings,
-  Shield,
-  Activity,
-  DollarSign,
-  TrendingUp,
-  FileDown,
-  Compass,
-  Sparkles,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import PipelineBoard from "@/components/dashboard/PipelineBoard";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Building2,
+  Settings,
+  Grid,
+  FileText,
+  Users,
+  Plus,
+  Sparkles,
+  CreditCard,
+  CheckCircle,
+  FileDown,
+  RefreshCw,
+  Activity,
+} from "lucide-react";
 
 interface Job {
   id: string;
   title: string;
-  sector: string;
   country: string;
+  sector: string;
   vacancies: number;
-  status: string;
+  salaryRange?: string | null;
   createdAt: string;
 }
 
-export default function CompleteEmployerDashboard() {
-  const [profile, setProfile] = useState<any>(null);
+interface Application {
+  id: string;
+  status: string;
+  visaStatus: string;
+  notes?: string | null;
+  createdAt: string;
+  interviewDate?: string | null;
+  job: {
+    title: string;
+    country: string;
+  };
+  candidate: {
+    fullName: string;
+    phone: string | null;
+    resumeUrl: string | null;
+    experienceYears: number | null;
+    skills: string | null;
+  };
+}
+
+interface Profile {
+  companyName: string;
+  industry: string | null;
+  website: string | null;
+  logoUrl: string | null;
+}
+
+export default function EmployerDashboard() {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"overview" | "profile" | "jobs" | "applicants" | "billing" | "settings">("overview");
+  
+  // Data States
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [applications, setApplications] = useState<any[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Tab routing
-  const [activeTab, setActiveTab] = useState<"overview" | "profile" | "jobs" | "applicants" | "reports" | "billing" | "settings">("overview");
-
-  // Post job form states
+  // Form States (New Job)
   const [showJobForm, setShowJobForm] = useState(false);
-  const [formLoading, setFormLoading] = useState(false);
-  const [formMsg, setFormMsg] = useState<{ text: string; isError: boolean } | null>(null);
-
   const [title, setTitle] = useState("");
-  const [sector, setSector] = useState("Construction");
   const [country, setCountry] = useState("Saudi Arabia");
+  const [sector, setSector] = useState("Construction");
   const [salaryRange, setSalaryRange] = useState("");
-  const [vacancies, setVacancies] = useState("1");
+  const [vacancies, setVacancies] = useState("10");
   const [description, setDescription] = useState("");
   const [requirements, setRequirements] = useState("");
-  const [benefits, setBenefits] = useState("");
 
-  // Company Profile form states
+  // Form States (Profile)
   const [companyName, setCompanyName] = useState("");
   const [industry, setIndustry] = useState("");
   const [website, setWebsite] = useState("");
-  const [contactPerson, setContactPerson] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [profileSaving, setProfileSaving] = useState(false);
+
+  // Action feedback states
+  const [formLoading, setFormLoading] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
+  const [formMsg, setFormMsg] = useState<{ text: string; isError: boolean } | null>(null);
   const [profileMsg, setProfileMsg] = useState<string | null>(null);
+
+  const t = useTranslations("employerDashboard");
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
   const fetchDashboardData = async () => {
-    setLoading(true);
     try {
-      const meRes = await fetch("/api/auth/me");
-      if (meRes.ok) {
-        const meData = await meRes.json();
-        const emp = meData.user.employer;
-        setProfile(emp);
-        if (emp) {
-          setCompanyName(emp.companyName || "");
-          setIndustry(emp.industry || "");
-          setWebsite(emp.website || "");
-          setContactPerson(emp.contactPerson || "");
-          setPhone(emp.phone || "");
-          setAddress(emp.address || "");
+      const res = await fetch("/api/dashboard/employer");
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+      const data = await res.json();
+      if (res.ok) {
+        setJobs(data.jobs || []);
+        setApplications(data.applications || []);
+        
+        if (data.profile) {
+          setProfile(data.profile);
+          setCompanyName(data.profile.companyName || "");
+          setIndustry(data.profile.industry || "");
+          setWebsite(data.profile.website || "");
         }
       }
-
-      const appRes = await fetch("/api/applications");
-      if (appRes.ok) {
-        const appData = await appRes.json();
-        setApplications(appData.applications || []);
-      }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (profile) {
-      fetch("/api/jobs")
-        .then((res) => res.json())
-        .then((data) => {
-          setJobs(data.jobs.filter((j: any) => j.employerId === profile.id) || []);
-        });
-    }
-  }, [profile]);
 
   const handlePostJob = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,87 +129,116 @@ export default function CompleteEmployerDashboard() {
     setFormMsg(null);
 
     try {
-      const res = await fetch("/api/jobs", {
+      const res = await fetch("/api/dashboard/employer/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, requirements, benefits, sector, country, salaryRange, vacancies }),
+        body: JSON.stringify({
+          title,
+          country,
+          sector,
+          salaryRange,
+          vacancies: parseInt(vacancies),
+          description,
+          requirements,
+        }),
       });
-      const data = await res.json();
+
       if (res.ok) {
-        setFormMsg({ text: "Vacancy published successfully!", isError: false });
+        setFormMsg({ text: t("postSuccessMsg"), isError: false });
         setTitle("");
         setSalaryRange("");
-        setVacancies("1");
         setDescription("");
         setRequirements("");
-        setBenefits("");
-        setShowJobForm(false);
         fetchDashboardData();
+        setTimeout(() => setShowJobForm(false), 1200);
       } else {
-        setFormMsg({ text: data.error || "Failed to post job.", isError: true });
+        setFormMsg({ text: t("postFailedMsg"), isError: true });
       }
-    } catch (e) {
-      setFormMsg({ text: "A network error occurred.", isError: true });
+    } catch (err) {
+      setFormMsg({ text: t("networkErrorMsg"), isError: true });
     } finally {
       setFormLoading(false);
     }
   };
 
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setProfileSaving(true);
-    setProfileMsg(null);
-    setTimeout(() => {
-      setProfileSaving(false);
-      setProfileMsg("Corporate profile updated successfully!");
-      if (profile) {
-        setProfile({ ...profile, companyName, industry, website, contactPerson, phone, address });
-      }
-    }, 1000);
-  };
-
-  const [generatingAI, setGeneratingAI] = useState(false);
   const handleAIGenerateJob = async () => {
     if (!title) {
-      alert("Please enter a Job Title first (e.g. HVAC Commissioning Technician).");
+      setFormMsg({ text: t("seedAiMsg"), isError: true });
       return;
     }
+
     setGeneratingAI(true);
+    setFormMsg(null);
+
     try {
-      const res = await fetch("/api/ai", {
+      const res = await fetch("/api/ai/generate-job", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "job-description", title, sector, country }),
+        body: JSON.stringify({ title, sector, country }),
       });
+
+      const data = await res.json();
+
       if (res.ok) {
-        const data = await res.json();
-        setDescription(data.jd.description);
-        setRequirements(data.jd.requirements);
-        setBenefits(data.jd.benefits);
+        setDescription(data.description);
+        setRequirements(data.requirements);
+        setFormMsg({ text: t("aiSuccessMsg"), isError: false });
+      } else {
+        setFormMsg({ text: t("aiFailedMsg"), isError: true });
       }
     } catch (e) {
-      console.error(e);
+      setFormMsg({ text: t("networkErrorMsg"), isError: true });
     } finally {
       setGeneratingAI(false);
     }
   };
 
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileMsg(null);
+
+    try {
+      const res = await fetch("/api/dashboard/employer/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyName, industry, website }),
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        setProfile(updated);
+        setProfileMsg(t("profileSuccessMsg"));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-luxury-light dark:bg-navy-950 text-xs font-semibold text-navy-900 dark:text-white transition-colors duration-200">
+        <RefreshCw className="h-5 w-5 animate-spin text-gold-500 mr-2" />
+        <span>{t("resolving")}</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col min-h-screen bg-luxury-light text-navy-900 font-sans">
+    <div className="flex flex-col min-h-screen bg-luxury-light dark:bg-navy-950 text-navy-900 dark:text-white transition-colors duration-200 overflow-x-hidden">
       <Navbar />
 
       <div className="bg-[#051B3D] text-white py-12 border-b border-blue-600/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="space-y-1">
-            <h1 className="font-serif text-2xl font-bold text-white">Recruiter Command Desk</h1>
-            <p className="text-xs text-gray-300 font-light">Publish jobs, screen trade grades, and mobilize applicants.</p>
+            <h1 className="font-headline text-2xl font-bold text-white">{t("welcomeTitle")}</h1>
+            <p className="text-xs text-gray-300 font-light">{t("welcomeDesc")}</p>
           </div>
-
-          <div className="bg-[#0B3D91] border border-blue-600/20 rounded-2xl p-3.5 flex items-center space-x-3 text-xs font-bold">
-            <Landmark className="h-4.5 w-4.5 text-blue-500" />
+          
+          <div className="bg-[#0B3D91] border border-blue-600/20 rounded-2xl p-3.5 flex items-center space-x-3 text-xs">
+            <Building2 className="h-4.5 w-4.5 text-blue-500" />
             <div>
-              <p className="text-gray-205">{profile?.companyName || "Almarai Foods"}</p>
-              <p className="text-[10px] text-gray-400 font-light mt-0.5 uppercase tracking-wider">{profile?.industry || "FMCG Partner"}</p>
+              <p className="font-bold text-gray-200">{profile?.companyName || "Saudi Engineering Co."}</p>
+              <p className="text-[10px] text-gray-400 font-light mt-0.5">{t("verifyBadge")}</p>
             </div>
           </div>
         </div>
@@ -208,17 +246,16 @@ export default function CompleteEmployerDashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 flex flex-col lg:flex-row gap-8">
         
-        {/* Navigation Sidebar */}
-        <aside className="lg:w-60 shrink-0">
-          <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-md space-y-2 sticky top-24">
+        {/* Navigation Sidebar Drawer */}
+        <aside className="lg:w-60 w-full shrink-0">
+          <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-4 shadow-md flex flex-row overflow-x-auto lg:flex-col lg:space-y-2 gap-2 scrollbar-hide sticky top-24">
             {[
-              { tab: "overview", label: "Control Center", icon: Grid },
-              { tab: "profile", label: "Client Profile", icon: Landmark },
-              { tab: "jobs", label: "Active Postings", icon: Briefcase },
-              { tab: "applicants", label: "ATS board", icon: Users },
-              { tab: "reports", label: "Reports Desk", icon: TrendingUp },
-              { tab: "billing", label: "Billing & Invoices", icon: CreditCard },
-              { tab: "settings", label: "Settings Desk", icon: Settings },
+              { tab: "overview", label: t("tabOverview"), icon: Grid },
+              { tab: "profile", label: t("tabProfile"), icon: Building2 },
+              { tab: "jobs", label: t("tabJobs"), icon: FileText },
+              { tab: "applicants", label: t("tabApplicants"), icon: Users },
+              { tab: "billing", label: t("tabBilling"), icon: CreditCard },
+              { tab: "settings", label: t("tabSettings"), icon: Settings },
             ].map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.tab;
@@ -230,10 +267,10 @@ export default function CompleteEmployerDashboard() {
                     setProfileMsg(null);
                     setFormMsg(null);
                   }}
-                  className={`w-full flex items-center space-x-2.5 px-4 py-3 rounded-xl text-left text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  className={`w-auto lg:w-full flex items-center space-x-2.5 px-4 py-3 rounded-xl text-left text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     isActive
                       ? "bg-blue-600 text-white shadow border-l-4 border-white font-bold"
-                      : "text-gray-500 hover:bg-luxury-light hover:text-[#051B3D]"
+                      : "text-gray-500 dark:text-gray-400 hover:bg-luxury-light dark:hover:bg-navy-900 hover:text-[#051B3D] dark:hover:text-white"
                   }`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
@@ -259,56 +296,56 @@ export default function CompleteEmployerDashboard() {
               {/* Tab 1: Overview */}
               {activeTab === "overview" && (
                 <div className="space-y-6">
-                  <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="space-y-1">
-                      <h3 className="font-serif text-sm font-bold text-navy-900">Control Panel Overview</h3>
-                      <p className="text-[11px] text-gray-505 font-light font-sans">Monitor active hiring drives, screening pipelines and visa steps.</p>
+                      <h3 className="font-headline text-sm font-bold text-navy-900 dark:text-white">{t("controlPanelOverview")}</h3>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 font-light font-sans">{t("controlPanelDesc")}</p>
                     </div>
                     <button
                       onClick={() => setShowJobForm(true)}
                       className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-wider px-5 py-3.5 rounded-xl border border-blue-500/25 flex items-center space-x-1.5 shadow-sm cursor-pointer transition-colors"
                     >
                       <Plus className="h-4 w-4" />
-                      <span>Post Vacancy</span>
+                      <span>{t("btnPostJob")}</span>
                     </button>
                   </div>
 
                   {/* Counters */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-xs font-semibold">
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-md space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block font-sans">Active campaigns</span>
-                      <span className="text-2xl font-serif font-extrabold text-navy-900">{jobs.length}</span>
+                    <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-5 shadow-md space-y-1">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-400 font-bold uppercase tracking-wider block font-sans">{t("activeCampaigns")}</span>
+                      <span className="text-2xl font-serif font-extrabold text-navy-900 dark:text-white">{jobs.length}</span>
                     </div>
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-md space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block font-sans">Sourced Applicants</span>
-                      <span className="text-2xl font-serif font-extrabold text-navy-900">{applications.length}</span>
+                    <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-5 shadow-md space-y-1">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-400 font-bold uppercase tracking-wider block font-sans">{t("sourcedApplicants")}</span>
+                      <span className="text-2xl font-serif font-extrabold text-navy-900 dark:text-white">{applications.length}</span>
                     </div>
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-md space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block font-sans">Active Visas</span>
-                      <span className="text-2xl font-serif font-extrabold text-navy-900">{applications.filter(a => a.status === "VISA_STAGE").length}</span>
+                    <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-5 shadow-md space-y-1">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-400 font-bold uppercase tracking-wider block font-sans">{t("activeVisas")}</span>
+                      <span className="text-2xl font-serif font-extrabold text-navy-900 dark:text-white">{applications.filter(a => a.status === "VISA_STAGE").length}</span>
                     </div>
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-md space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block font-sans">Subscription Tier</span>
-                      <span className="text-xs font-bold text-blue-650 uppercase tracking-widest block pt-2">Enterprise Core</span>
+                    <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-5 shadow-md space-y-1">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-400 font-bold uppercase tracking-wider block font-sans">{t("subscriptionTier")}</span>
+                      <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block pt-2">{t("enterpriseCore")}</span>
                     </div>
                   </div>
 
                   {/* Activity Log */}
-                  <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-4">
-                    <h3 className="font-serif font-bold text-xs text-navy-900 pb-3 border-b border-gray-150 uppercase tracking-wider flex items-center space-x-2">
+                  <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-4">
+                    <h3 className="font-headline font-bold text-xs text-navy-900 dark:text-white pb-3 border-b border-gray-150 dark:border-white/5 uppercase tracking-wider flex items-center space-x-2">
                       <Activity className="h-4.5 w-4.5 text-blue-500" />
-                      <span>Activity Log</span>
+                      <span>{t("reportsTitle")}</span>
                     </h3>
 
                     <div className="space-y-4 text-xs font-light">
                       {[
-                        { time: "2 hours ago", desc: "Shortlisted Candidate Rahul Sharma for Senior Industrial Electrician drive." },
-                        { time: "Yesterday", desc: "Scheduled Zoom Interview for candidate Rahul Sharma on Thursday 11:00 AM." },
-                        { time: "3 days ago", desc: "Published new global vacancy campaign: Senior Industrial Electrician (15 open slots)." },
+                        { time: t("timeLog1"), desc: t("log1") },
+                        { time: t("timeLog2"), desc: t("log2") },
+                        { time: t("timeLog3"), desc: t("log3") },
                       ].map((item, i) => (
                         <div key={i} className="flex space-x-3 items-start">
-                          <span className="text-[10px] text-blue-600 font-bold shrink-0 w-20">{item.time}</span>
-                          <p className="text-gray-500 leading-relaxed font-sans font-medium">{item.desc}</p>
+                          <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold shrink-0 w-20">{item.time}</span>
+                          <p className="text-gray-500 dark:text-gray-400 leading-relaxed font-sans font-medium">{item.desc}</p>
                         </div>
                       ))}
                     </div>
@@ -318,232 +355,161 @@ export default function CompleteEmployerDashboard() {
 
               {/* Tab 2: Profile */}
               {activeTab === "profile" && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-md space-y-6">
+                <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 sm:p-8 shadow-md space-y-6">
                   <div>
-                    <h3 className="font-serif text-sm font-bold text-navy-900 pb-2 border-b border-gray-150 uppercase tracking-wider">Company Profile</h3>
-                    <p className="text-[10px] text-gray-400 font-light mt-1">Configure company profiles to present on vacancy boards.</p>
+                    <h3 className="font-headline text-sm font-bold text-navy-900 dark:text-white pb-2 border-b border-gray-150 dark:border-white/5 uppercase tracking-wider">{t("companyProfile")}</h3>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-400 font-light mt-1">{t("companyProfileDesc")}</p>
                   </div>
 
                   {profileMsg && (
-                    <div className="p-4 bg-green-50 border border-green-200 text-green-705 rounded-xl text-xs font-semibold">
+                    <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-xl text-xs font-semibold">
                       {profileMsg}
                     </div>
                   )}
 
-                  <form onSubmit={handleUpdateProfile} className="space-y-4 text-xs font-semibold text-gray-550">
+                  <form onSubmit={handleUpdateProfile} className="space-y-4 text-xs font-semibold text-gray-550 dark:text-gray-300 font-sans">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block mb-1 text-navy-900">Company Name *</label>
+                        <label className="block mb-1 text-navy-900 dark:text-gray-300">{t("fieldCompanyName")} *</label>
                         <input
                           type="text"
                           required
                           value={companyName}
                           onChange={(e) => setCompanyName(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-200 text-[#051B3D] rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium"
+                          className="w-full bg-luxury-light dark:bg-navy-950 border border-gray-205 dark:border-white/10 text-navy-900 dark:text-white rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium font-sans"
                         />
                       </div>
                       <div>
-                        <label className="block mb-1 text-navy-900">Industry Sector</label>
+                        <label className="block mb-1 text-navy-900 dark:text-gray-300">{t("industrySector")}</label>
                         <input
                           type="text"
                           value={industry}
                           onChange={(e) => setIndustry(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-200 text-[#051B3D] rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium"
+                          className="w-full bg-luxury-light dark:bg-navy-950 border border-gray-205 dark:border-white/10 text-navy-900 dark:text-white rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium font-sans"
                         />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                       <div>
-                        <label className="block mb-1 text-navy-900">Corporate Website</label>
+                        <label className="block mb-1 text-navy-900 dark:text-gray-300">{t("corporateWebsite")}</label>
                         <input
                           type="text"
                           value={website}
                           onChange={(e) => setWebsite(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-200 text-[#051B3D] rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium"
+                          className="w-full bg-luxury-light dark:bg-navy-950 border border-gray-205 dark:border-white/10 text-navy-900 dark:text-white rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium font-sans"
                         />
                       </div>
-                      <div>
-                        <label className="block mb-1 text-navy-900">Contact Officer</label>
-                        <input
-                          type="text"
-                          value={website}
-                          onChange={(e) => setContactPerson(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-200 text-[#051B3D] rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium"
-                        />
-                      </div>
-                      <div>
-                        <label className="block mb-1 text-navy-900">Telephone Hotlines</label>
-                        <input
-                          type="text"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          className="w-full bg-luxury-light border border-gray-200 text-[#051B3D] rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block mb-1 text-navy-900">Corporate Address</label>
-                      <input
-                        type="text"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        className="w-full bg-luxury-light border border-gray-200 text-[#051B3D] rounded-xl p-3.5 outline-none focus:border-blue-500 font-medium"
-                      />
                     </div>
 
                     <button
                       type="submit"
-                      disabled={profileSaving}
-                      className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-3.5 rounded-xl border border-blue-500/25 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+                      className="bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-4 px-8 rounded-xl border border-blue-500/25 cursor-pointer font-headline"
                     >
-                      {profileSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <span>Save Company Profile</span>}
+                      {t("saveCorporate")}
                     </button>
                   </form>
                 </div>
               )}
 
-              {/* Tab 3: Active Postings */}
+              {/* Tab 3: Active drives */}
               {activeTab === "jobs" && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-6">
-                  <div className="flex justify-between items-center pb-3 border-b border-gray-150">
-                    <h3 className="font-serif text-sm font-bold text-navy-900 uppercase tracking-wider">Hiring Campaigns</h3>
-                    <span className="text-xs text-gray-500 font-semibold">{jobs.length} Published vacancies</span>
+                <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-4">
+                  <div className="flex justify-between items-center pb-3 border-b border-gray-150 dark:border-white/5">
+                    <h3 className="font-headline font-bold text-xs text-navy-900 dark:text-white uppercase tracking-wider">{t("activeCampaigns")}</h3>
+                    <button
+                      onClick={() => setShowJobForm(true)}
+                      className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl border border-blue-500/25 flex items-center space-x-1 cursor-pointer transition-colors"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>{t("btnPostJob")}</span>
+                    </button>
                   </div>
 
                   {jobs.length === 0 ? (
-                    <div className="py-16 text-center text-gray-400 text-xs font-semibold">
-                      <Briefcase className="h-8 w-8 text-blue-500 mx-auto mb-3" />
-                      <p>No active postings cataloged.</p>
-                    </div>
+                    <p className="text-xs text-gray-400 py-10 text-center font-light font-sans">{t("noJobsCreated")}</p>
                   ) : (
-                    <div className="overflow-x-auto text-xs font-semibold">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="border-b border-gray-150 text-gray-400">
-                            <th className="pb-3.5">Position Title</th>
-                            <th className="pb-3.5">Sector</th>
-                            <th className="pb-3.5">Country</th>
-                            <th className="pb-3.5">Vacancies</th>
-                            <th className="pb-3.5">Status</th>
-                            <th className="pb-3.5 text-right">Date Created</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 font-medium">
-                          {jobs.map((job) => (
-                            <tr key={job.id} className="text-[#051B3D]">
-                              <td className="py-4 font-bold">{job.title}</td>
-                              <td className="py-4 text-gray-500">{job.sector}</td>
-                              <td className="py-4 text-gray-500">{job.country}</td>
-                              <td className="py-4">{job.vacancies} Positions</td>
-                              <td className="py-4">
-                                <span className="bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase">
-                                  {job.status}
-                                </span>
-                              </td>
-                              <td className="py-4 text-gray-400">{new Date(job.createdAt).toLocaleDateString()}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {jobs.map((job) => (
+                        <div key={job.id} className="border border-gray-200 dark:border-white/5 rounded-2xl p-5 space-y-3 bg-luxury-light dark:bg-navy-950/30">
+                          <div>
+                            <span className="text-[9px] uppercase tracking-wider font-bold text-blue-600 dark:text-blue-400 bg-blue-600/10 px-2.5 py-0.5 rounded-lg border border-blue-500/10">
+                              {job.sector}
+                            </span>
+                            <h4 className="font-headline text-sm font-bold text-navy-900 dark:text-white pt-1">{job.title}</h4>
+                            <p className="text-[10px] text-gray-400 font-semibold">{job.country}</p>
+                          </div>
+                          <div className="flex justify-between items-center text-[10px] text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-150 dark:border-white/5">
+                            <span>{t("openSlots")}<strong className="text-navy-900 dark:text-white font-bold">{job.vacancies}</strong></span>
+                            <span>{new Date(job.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Tab 4: ATS Pipeline board */}
+              {/* Tab 4: Applicants ATS */}
               {activeTab === "applicants" && (
-                <div className="space-y-4">
-                  <div className="pb-2 border-b border-gray-200">
-                    <h3 className="font-serif text-sm font-bold text-navy-900 uppercase tracking-wider">Hiring Pipeline Board</h3>
-                    <p className="text-xs text-gray-500 mt-0.5 font-sans">Click candidate cards to update logs, schedule interviews, select or reject.</p>
+                <div className="space-y-6">
+                  <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md">
+                    <h3 className="font-headline font-bold text-xs text-navy-900 dark:text-white pb-3 border-b border-gray-150 dark:border-white/5 uppercase tracking-wider">{t("applicantsTitle")}</h3>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-400 font-light mt-1">{t("applicantsDesc")}</p>
                   </div>
                   <PipelineBoard applications={applications} onRefresh={fetchDashboardData} />
                 </div>
               )}
 
-              {/* Tab 5: Reports Desk */}
-              {activeTab === "reports" && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-6">
-                  <div>
-                    <h3 className="font-serif text-sm font-bold text-[#051B3D] pb-2 border-b border-gray-150 uppercase tracking-wider">Recruitment Analytics</h3>
-                    <p className="text-[10px] text-gray-400 font-light mt-1 font-sans">Visual metrics of screening ratios and mobilizations.</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-gray-500 font-medium">
-                    <div className="bg-luxury-light border border-gray-200 p-5 rounded-2xl space-y-4">
-                      <h4 className="font-bold text-navy-900">Campaign Screening Funnel</h4>
-                      <div className="space-y-3.5 font-semibold text-[11px] text-[#051B3D]">
-                        <div className="flex justify-between"><span>Applied CVs</span><span className="text-[#051B3D]">100% (25)</span></div>
-                        <div className="flex justify-between"><span>Shortlisted candidates</span><span className="text-[#051B3D]">60% (15)</span></div>
-                        <div className="flex justify-between"><span>Interviews Scheduled</span><span className="text-[#051B3D]">40% (10)</span></div>
-                        <div className="flex justify-between"><span>Consulate Selects</span><span className="text-[#051B3D]">20% (5)</span></div>
-                      </div>
-                    </div>
-
-                    <div className="bg-luxury-light border border-gray-200 p-5 rounded-2xl space-y-4">
-                      <h4 className="font-bold text-navy-900">Hiring Average Timing</h4>
-                      <div className="space-y-3.5 font-semibold text-[11px] text-[#051B3D]">
-                        <div className="flex justify-between"><span>Time to select candidates</span><span className="text-[#051B3D]">12 Days</span></div>
-                        <div className="flex justify-between"><span>Medical & Wafid clearance</span><span className="text-[#051B3D]">8 Days</span></div>
-                        <div className="flex justify-between"><span>Consulate visa stamping</span><span className="text-[#051B3D]">14 Days</span></div>
-                        <div className="flex justify-between"><span>Average time to deploy</span><span className="text-[#051B3D]">34 Days</span></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Tab 6: Billing */}
+              {/* Tab 5: Billing */}
               {activeTab === "billing" && (
                 <div className="space-y-6">
                   {/* Subscription card */}
-                  <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div className="space-y-2">
-                      <span className="text-[10px] text-blue-600 bg-blue-500/10 px-2.5 py-0.5 rounded-lg border border-blue-500/20 uppercase font-bold tracking-wider">Active Tier</span>
-                      <h3 className="font-serif text-sm font-bold text-navy-900 uppercase tracking-wider">Enterprise Core Plan</h3>
-                      <p className="text-xs text-gray-500 leading-relaxed font-light font-sans">Includes unlimited job postings, complete access to database CV searches, and custom visa tracking pipelines.</p>
+                      <span className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-lg border border-blue-500/20 uppercase font-bold tracking-wider">{t("activeTier")}</span>
+                      <h3 className="font-headline text-sm font-bold text-navy-900 dark:text-white uppercase tracking-wider">{t("enterpriseCorePlan")}</h3>
+                      <p className="text-xs text-gray-505 dark:text-gray-400 leading-relaxed font-light font-sans">{t("enterprisePlanDesc")}</p>
                     </div>
                     <div className="text-center md:text-right text-xs font-semibold">
-                      <p className="text-gray-400">Next Renewal Date</p>
-                      <p className="text-[#051B3D] text-lg font-bold">September 15, 2026</p>
-                      <p className="text-blue-600 font-bold tracking-widest mt-1">₹1,50,000 / Annual</p>
+                      <p className="text-gray-400">{t("nextRenewal")}</p>
+                      <p className="text-navy-900 dark:text-white text-lg font-bold">September 15, 2026</p>
+                      <p className="text-blue-600 dark:text-blue-400 font-bold tracking-widest mt-1">{t("renewalCost")}</p>
                     </div>
                   </div>
 
                   {/* Invoices */}
-                  <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md space-y-4">
-                    <h3 className="font-serif font-bold text-xs text-[#051B3D] pb-3 border-b border-gray-150 uppercase tracking-wider">Invoice History</h3>
+                  <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-md space-y-4">
+                    <h3 className="font-headline font-bold text-xs text-navy-900 dark:text-white pb-3 border-b border-gray-150 dark:border-white/5 uppercase tracking-wider">{t("invoiceHistory")}</h3>
                     <div className="overflow-x-auto text-xs font-semibold">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="border-b border-gray-150 text-gray-400">
-                            <th className="pb-3.5">Invoice ID</th>
-                            <th className="pb-3.5">Billing Period</th>
-                            <th className="pb-3.5">Amount Paid</th>
-                            <th className="pb-3.5">Status</th>
-                            <th className="pb-3.5 text-right">Download</th>
+                          <tr className="border-b border-gray-150 dark:border-white/5 text-gray-400">
+                            <th className="pb-3.5">{t("invoiceId")}</th>
+                            <th className="pb-3.5">{t("billingPeriod")}</th>
+                            <th className="pb-3.5">{t("amountPaid")}</th>
+                            <th className="pb-3.5">{t("status")}</th>
+                            <th className="pb-3.5 text-right">{t("download")}</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 font-medium">
+                        <tbody className="divide-y divide-gray-100 dark:divide-white/5 font-medium text-navy-900 dark:text-white">
                           {[
                             { id: "INV-2026-904", period: "Sept 2025 - Sept 2026", amount: "₹1,50,000", status: "PAID" },
                             { id: "INV-2024-812", period: "Sept 2024 - Sept 2025", amount: "₹1,20,000", status: "PAID" },
                           ].map((inv) => (
-                            <tr key={inv.id} className="text-[#051B3D]">
+                            <tr key={inv.id} className="text-[#051B3D] dark:text-white">
                               <td className="py-4 font-bold">{inv.id}</td>
-                              <td className="py-4 text-gray-500">{inv.period}</td>
-                              <td className="py-4 text-blue-600 font-bold">{inv.amount}</td>
+                              <td className="py-4 text-gray-500 dark:text-gray-400">{inv.period}</td>
+                              <td className="py-4 text-blue-600 dark:text-blue-455 font-bold">{inv.amount}</td>
                               <td className="py-4">
-                                <span className="bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase">
+                                <span className="bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase">
                                   {inv.status}
                                 </span>
                               </td>
                               <td className="py-4 text-right">
                                 <button
-                                  onClick={() => alert(`Downloading invoice receipt: ${inv.id}.pdf`)}
-                                  className="text-navy-900 hover:text-blue-500 font-bold uppercase tracking-wider inline-flex items-center space-x-1 cursor-pointer"
+                                  onClick={() => alert(t("alertDlInvoice").replace("{id}", inv.id))}
+                                  className="text-navy-900 dark:text-white hover:text-blue-500 font-bold uppercase tracking-wider inline-flex items-center space-x-1 cursor-pointer border-none bg-transparent"
                                 >
                                   <FileDown className="h-4 w-4 shrink-0" />
                                 </button>
@@ -559,41 +525,41 @@ export default function CompleteEmployerDashboard() {
 
               {/* Tab 7: Settings */}
               {activeTab === "settings" && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-md space-y-6">
+                <div className="bg-white dark:bg-navy-900/40 border border-gray-200 dark:border-white/5 rounded-2xl p-6 sm:p-8 shadow-md space-y-6">
                   <div>
-                    <h3 className="font-serif text-sm font-bold text-navy-900 pb-2 border-b border-gray-150 uppercase tracking-wider">Account Settings</h3>
-                    <p className="text-[10px] text-gray-400 font-light mt-1 font-sans">Configure portal passwords and credential alerts.</p>
+                    <h3 className="font-headline text-sm font-bold text-navy-900 dark:text-white pb-2 border-b border-gray-150 dark:border-white/5 uppercase tracking-wider">{t("tabSettings")}</h3>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-400 font-light mt-1 font-sans">{t("settingsDesc")}</p>
                   </div>
 
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
-                      alert("Recruiter portal password updated successfully!");
+                      alert(t("alertPasswordSuccess"));
                     }}
-                    className="space-y-4 max-w-sm text-xs font-semibold text-gray-550"
+                    className="space-y-4 max-w-sm text-xs font-semibold text-gray-555 dark:text-gray-300 font-sans"
                   >
                     <div>
-                      <label className="block mb-1 text-navy-900">Current Password</label>
+                      <label className="block mb-1 text-navy-900 dark:text-gray-300">{t("currentPassword")}</label>
                       <input
                         type="password"
                         required
-                        className="w-full bg-luxury-light border border-gray-200 rounded-xl p-3.5 outline-none font-medium text-navy-900"
+                        className="w-full bg-luxury-light dark:bg-navy-950 border border-gray-200 dark:border-white/10 rounded-xl p-3.5 outline-none font-medium text-navy-900 dark:text-white font-sans"
                       />
                     </div>
                     <div>
-                      <label className="block mb-1 text-navy-900">New Password</label>
+                      <label className="block mb-1 text-navy-900 dark:text-gray-300">{t("newPassword")}</label>
                       <input
                         type="password"
                         required
-                        className="w-full bg-luxury-light border border-gray-200 rounded-xl p-3.5 outline-none font-medium text-navy-900"
+                        className="w-full bg-luxury-light dark:bg-navy-950 border border-gray-200 dark:border-white/10 rounded-xl p-3.5 outline-none font-medium text-navy-900 dark:text-white font-sans"
                       />
                     </div>
 
                     <button
                       type="submit"
-                      className="bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-3.5 px-6 rounded-xl border border-blue-500/25 cursor-pointer"
+                      className="bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-3.5 px-6 rounded-xl border border-blue-500/25 cursor-pointer font-headline"
                     >
-                      Update Password
+                      {t("updatePassword")}
                     </button>
                   </form>
                 </div>
@@ -622,18 +588,18 @@ export default function CompleteEmployerDashboard() {
             >
               <div className="flex justify-between items-start border-b border-blue-600/20 pb-4 mb-4">
                 <div>
-                  <h3 className="font-serif text-sm font-bold text-white uppercase tracking-wider">Publish Sourced Position</h3>
-                  <p className="text-[10px] text-gray-300 font-light">Input technical qualifications to list on Job Board.</p>
+                  <h3 className="font-headline text-sm font-bold text-white uppercase tracking-wider">{t("formPostJobTitle")}</h3>
+                  <p className="text-[10px] text-gray-300 font-light">{t("formPostJobDesc")}</p>
                 </div>
                 <div className="flex items-center space-x-2 shrink-0">
                   <button
                     type="button"
                     onClick={handleAIGenerateJob}
                     disabled={generatingAI}
-                    className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer transition-colors border border-blue-500/25"
+                    className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer transition-colors border border-blue-500/25 font-headline"
                   >
                     {generatingAI ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                    <span>AI Generate Details</span>
+                    <span>{t("aiGenerateDetails")}</span>
                   </button>
                   <button
                     type="button"
@@ -643,7 +609,7 @@ export default function CompleteEmployerDashboard() {
                     }}
                     className="text-gray-400 hover:text-white font-bold p-1.5 text-xs cursor-pointer border border-blue-600/20 rounded-xl bg-navy-900"
                   >
-                    ✕ Close
+                    {t("close")}
                   </button>
                 </div>
               </div>
@@ -657,7 +623,7 @@ export default function CompleteEmployerDashboard() {
               <form onSubmit={handlePostJob} className="space-y-4 text-xs font-semibold text-gray-300 font-sans">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block mb-1 text-white">Job Title *</label>
+                    <label className="block mb-1 text-white">{t("fieldJobTitle")} *</label>
                     <input
                       type="text"
                       required
@@ -668,7 +634,7 @@ export default function CompleteEmployerDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="block mb-1 text-white">Sourcing Sector *</label>
+                    <label className="block mb-1 text-white">{t("sourcingSector")}</label>
                     <select
                       value={sector}
                       onChange={(e) => setSector(e.target.value)}
@@ -686,7 +652,7 @@ export default function CompleteEmployerDashboard() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block mb-1 text-white">Destination Country *</label>
+                    <label className="block mb-1 text-white">{t("destinationCountry")}</label>
                     <select
                       value={country}
                       onChange={(e) => setCountry(e.target.value)}
@@ -702,7 +668,7 @@ export default function CompleteEmployerDashboard() {
                     </select>
                   </div>
                   <div>
-                    <label className="block mb-1 text-white">Salary Range</label>
+                    <label className="block mb-1 text-white">{t("fieldSalary")}</label>
                     <input
                       type="text"
                       value={salaryRange}
@@ -712,7 +678,7 @@ export default function CompleteEmployerDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="block mb-1 text-white">Vacancies *</label>
+                    <label className="block mb-1 text-white">{t("fieldVacancies")} *</label>
                     <input
                       type="number"
                       required
@@ -724,7 +690,7 @@ export default function CompleteEmployerDashboard() {
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-white">Description *</label>
+                  <label className="block mb-1 text-white">{t("fieldDesc")} *</label>
                   <textarea
                     rows={4}
                     required
@@ -735,7 +701,7 @@ export default function CompleteEmployerDashboard() {
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-white">Requirements *</label>
+                  <label className="block mb-1 text-white">{t("fieldReq")} *</label>
                   <textarea
                     rows={3}
                     required
@@ -748,9 +714,9 @@ export default function CompleteEmployerDashboard() {
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-4 rounded-xl flex items-center justify-center space-x-2 text-xs shadow cursor-pointer disabled:opacity-50 border border-blue-500/20"
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider py-4 rounded-xl flex items-center justify-center space-x-2 text-xs shadow cursor-pointer disabled:opacity-50 border border-blue-500/20 font-headline"
                 >
-                  {formLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <span>Publish Vacancy Campaign</span>}
+                  {formLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <span>{t("btnPost")}</span>}
                 </button>
               </form>
             </motion.div>

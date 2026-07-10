@@ -13,7 +13,7 @@ export default function SchemaMarkup({ type, data }: SchemaProps) {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "RAMA INTERNATIONAL-INDIA",
-      "alternateName": "RAMA INTERNATIONAL",
+      "alternateName": "RAMA INTERNATIONAL-INDIA",
       "url": "https://ramainternational.in",
       "logo": "https://ramainternational.in/logo.png",
       "foundingDate": "2018",
